@@ -1,0 +1,11 @@
+file:
+  /pipeline/gdc-client:
+    exists: true
+    mode: "0755" 
+    filetype: file
+package:
+  unzip:
+      installed: true
+  wget:
+      installed: true
+    
