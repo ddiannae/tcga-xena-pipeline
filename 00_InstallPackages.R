@@ -1,0 +1,8 @@
+cran <- c('ggplot2', 'reshape2', 'gplots', 'mGSZ')
+chooseCRANmirror(graphics=FALSE, ind=1)
+install.packages(cran, quiet = TRUE)
+sapply(cran, require, character.only=TRUE)
+source('http://bioconductor.org/biocLite.R')
+bioconductor <- c('NOISeq', 'EDASeq', 'DESeq2','edgeR', 'BiocParallel', 'org.Hs.eg.db', 'GOstats', 'cqn', 'limma')
+BiocInstaller::biocLite(bioconductor, ask = FALSE, suppressUpdates = TRUE, suppressAutoUpdate = TRUE, quiet = TRUE)
+sapply(bioconductor, require, character.only=TRUE)
