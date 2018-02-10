@@ -41,7 +41,10 @@
 DATADIR <- 'data/'
 args <- commandArgs(trailingOnly = TRUE)
 DATADIR <- args[1]
+RDATA <- paste(DATADIR, "rdata", sep="")
+dir.create(RDATA)
 cat('Data directory: ', DATADIR, '\n')
+
 ###############################################################################
 ##Usefull Libraries
 ###############################################################################
@@ -104,7 +107,7 @@ colnames(genes)<-c("EnsemblID", "version")
 
 ##Save clean data
 normal<-list(Counts=normal, Annot=genes, targets=targets)
-save(normal, file="NormalRaw.RData", compress="xz")
+save(normal, file=paste(RDATA, "NormalRaw.RData", sep="/"), compress="xz")
 cat('NormalRaw.RData saved \n')
 }##############################################################################
 {## 2) Read Tumour Data
@@ -159,7 +162,7 @@ genes<-do.call(rbind,sapply(genes[,1], strsplit, split=".", fixed=TRUE))
 colnames(genes)<-c("EnsemblID", "version")
 
 tumor<-list(Counts=tumor, Annot=genes, targets=targets)
-save(tumor, file="TumorRaw.RData", compress="xz")
+save(tumor, file=paste(RDATA, "TumorRaw.RData", sep="/"), compress="xz")
 cat('TumorRaw.RData saved \n')
 }##############################################################################
 {## 3) Read Biomart Data
@@ -172,7 +175,7 @@ cat('TumorRaw.RData saved \n')
 ###############################################################################
 ## Read the file
 cat('Working with annotation file: Biomart_EnsemblG91_GRCh38_p10.txt \n')
-annot<-read.delim(file="./Biomart_EnsemblG91_GRCh38_p10.txt", sep="\t")
+annot<-read.delim(file="/Biomart_EnsemblG91_GRCh38_p10.txt", sep="\t")
 dim(annot)
 # [1] 63967     7
 names(annot)<-c("EnsemblID", "Chr", "Start", "End", "GC", "Symbol", "Type")
@@ -220,7 +223,7 @@ dim(annot)
 # [1] 58206     8
 
 ## Save clean data
-save(annot, file="annot.RData", compress="xz")
+save(annot, file=paste(RDATA, "annot.RData", sep="/"), compress="xz")
 cat('annot.RData saved \n')
 }##############################################################################
 {##4) Merging count and annotation
@@ -239,9 +242,9 @@ cat('annot.RData saved \n')
 ##          -Save the clean Data
 ##############################################################################
 cat('Merging counts and annotations \n')
-load(file="annot.RData")
-load(file="TumorRaw.RData")
-load(file="NormalRaw.RData")
+load(file=paste(RDATA, "annot.RData", sep="/"))
+load(file=paste(RDATA, "TumorRaw.RData", sep="/"))
+load(file=paste(RDATA, "NormalRaw.RData", sep="/"))
 
 ##M=normal|tumor
 M<-cbind(normal$Counts, tumor$Counts)
@@ -372,7 +375,7 @@ stopifnot(all(1:nrow(M) %in% Annot$Row))
 
 ##Save the clean Data
 full<-list(M=M, Annot=Annot, Targets=targets)
-save(full, file="RawFull.RData", compress="xz")
+save(full, file=paste(RDATA, "RawFull.RData", sep="/"), compress="xz")
 cat("Saving RawFull.RData \n")
 }##############################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!

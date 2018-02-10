@@ -20,5 +20,6 @@ find $HEALTHYDIR -name '*.gz' -exec mv '{}' $HEALTHYDIR \;
 
 find . -type d -empty -delete
 find . -name '*.gz' -exec gunzip '{}' \;
+find . -name '*.gz' -exec rm '{}' \;
 
-Rscript 01_GetTheData.R $DATADIR
+Rscript /01_GetTheData.R $DATADIR

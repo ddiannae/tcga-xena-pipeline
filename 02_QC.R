@@ -62,7 +62,14 @@ options(width=80)
 ###############################################################################
 ##Quality Control
 ###############################################################################
-load(file="RawFull.RData")
+DATADIR <- 'data/'
+args <- commandArgs(trailingOnly = TRUE)
+DATADIR <- args[1]
+RDATA <- paste(DATADIR, "rdata", sep="")
+PLOTSDIR <-paste(DATADIR, "plots", sep="")
+dir.create(PLOTSDIR)
+
+load(file=paste(RDATA, "RawFull.RData", sep=""))
 {###Let's keep only the GC & length annotated genes
 ids<-!is.na(full$Annot$GC) & !is.na(full$Annot$Length)
 table(ids)
@@ -103,17 +110,20 @@ mydata <- NOISeq::readData(
 ## Biodetection plot
 mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
 par(mfrow = c(1,1))
+jpeg(paste(PLOTSDIR, "biodetection.jpg", sep=""))
 explo.plot(mybiodetection)
 dev.off()
 #What do we need to see here?
 
 ## Count distribution per biotype
 mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+jpeg(paste(PLOTSDIR, "countsbio.jpg", sep=""))
 explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
 #What about expression level?
 
 ## Saturation plot
 mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
+jpeg(paste(PLOTSDIR, "saturation.jpg", sep=""))
 explo.plot(mysaturation, toplot="protein_coding", 
     samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
 #What about the depth of our samples?    
