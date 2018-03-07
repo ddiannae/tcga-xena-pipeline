@@ -69,7 +69,7 @@ RDATA <- paste(DATADIR, "rdata", sep="")
 PLOTSDIR <-paste(DATADIR, "plots", sep="")
 dir.create(PLOTSDIR)
 
-load(file=paste(RDATA, "RawFull.RData", sep=""))
+load(file=paste(RDATA, "RawFull.RData", sep="/"))
 {###Let's keep only the GC & length annotated genes
 ids<-!is.na(full$Annot$GC) & !is.na(full$Annot$Length)
 table(ids)
@@ -92,7 +92,8 @@ row.names(full$M)<-full$Annot$EnsemblID
 row.names(full$Annot)<-full$Annot$EnsemblID
 row.names(full$Targets)<-full$Targets$ID
 full$Targets$Group<-factor(substr(full$Targets$ID, start=1, stop=1))
-table(full$Targets$Group)
+nsamples = table(full$Targets$Group)[1]
+tsamples = table(full$Targets$Group)[2]
 #   N   T 
 #  3  3 
 
@@ -110,58 +111,72 @@ mydata <- NOISeq::readData(
 ## Biodetection plot
 mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
 par(mfrow = c(1,1))
-jpeg(paste(PLOTSDIR, "biodetection.jpg", sep=""))
+jpeg(paste(PLOTSDIR, "biodetection.jpg", sep="/"))
 explo.plot(mybiodetection)
 dev.off()
 #What do we need to see here?
 
 ## Count distribution per biotype
 mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
-jpeg(paste(PLOTSDIR, "countsbio.jpg", sep=""))
+jpeg(paste(PLOTSDIR, "countsbio.jpg", sep="/"))
 explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
+dev.off()
 #What about expression level?
 
 ## Saturation plot
 mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
-jpeg(paste(PLOTSDIR, "saturation.jpg", sep=""))
+jpeg(paste(PLOTSDIR, "saturation.jpg", sep="/"))
 explo.plot(mysaturation, toplot="protein_coding", 
     samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
+dev.off()
 #What about the depth of our samples?    
 
 ## Count distribution per sample
 mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+jpeg(paste(PLOTSDIR, "protein_coding_boxplot.jpg", sep="/"))
 explo.plot(mycountsbio, toplot = "protein_coding", 
     samples = NULL, plottype = "boxplot")
+dev.off()
+jpeg(paste(PLOTSDIR, "protein_coding_barplot.jpg", sep="/"))
 explo.plot(mycountsbio, toplot = "protein_coding", 
     samples = NULL, plottype = "barplot")
+dev.off()
 mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
 ## Count distribution per Experimental factors
+jpeg(paste(PLOTSDIR, "protein_coding_boxplot_group.jpg", sep="/"))
 explo.plot(mycountsbio, toplot = "protein_coding", 
     samples = NULL, plottype = "boxplot")
+dev.off()
+jpeg(paste(PLOTSDIR, "protein_coding_barplot_group.jpg", sep="/"))
 explo.plot(mycountsbio, toplot = "protein_coding", 
     samples = NULL, plottype = "barplot")
+dev.off()
 #How much sensitivity we loose? 
-
 }##########################################
 {##Bias
 ##########################################
 ## Length bias detection
 mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
-par(mfrow = c(1,1))
+par(mfrow = c(1,2))
+jpeg(paste(PLOTSDIR, "lengthbias.jpg", sep="/"))
 explo.plot(mylengthbias, samples=1:2)
+dev.off()
 #Do we see a clear pattern?
 
 ##GC bias
 mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
 par(mfrow = c(1,2))
+jpeg(paste(PLOTSDIR, "GCbias.jpg", sep="/"))
 explo.plot(mygcbiasRaw)
+dev.off()
 #Do we see a clear pattern?
 
 ## RNA composition
 mycomp <- dat(mydata, norm=FALSE, type="cd")
+jpeg(paste(PLOTSDIR, "RNAComposition.jpg", sep="/"))
 explo.plot(mycomp, samples=1:12)
+dev.off()
 #Are the samples comparable?
-
 ##########################
 ## Quality Control Report
 ##########################
@@ -217,18 +232,24 @@ mydataCQN <- NOISeq::readData(
 mylengthbias <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE,
     type="lengthbias")
 par(mfrow = c(1,2))
+jpeg(paste(PLOTSDIR, "lengthbias_new.jpg", sep="/"))
 explo.plot(mylengthbias, samples = 1:2)
+dev.off()
 #Was it corrected?
 
 ##GC bias?
 mygcbiasRaw <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE, type="GCbias")
 par(mfrow = c(1,2))
+jpeg(paste(PLOTSDIR, "GCbias_new.jpg", sep="/"))
 explo.plot(mygcbiasRaw)
+dev.off()
 #Was it corrected?
 
 ## RNA composition?
 mycomp <- dat(mydataCQN, norm=TRUE, type = "cd")
+jpeg(paste(PLOTSDIR, "RNAComposition_new.jpg", sep="/"))
 explo.plot(mycomp, samples=1:12)
+dev.off()
 table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
 # FAILED PASSED 
 #     22     14 
@@ -238,8 +259,9 @@ table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
 #mean10 has the raw counts above mean > 10
 normalized.cqn<-list(M=normalized.cqn, Annot=mean10$Annot, 
     Targets=mean10$Targets, cqn=cqn.mean10)
-save(mean10, file="mean10.RData", compress="xz")        
-save(normalized.cqn, file="normalizedcqn.RData", compress="xz")    
+
+save(mean10, file=paste(RDATA, "mean10.RData", sep="/"), compress="xz")        
+save(normalized.cqn, file=paste(RDATA, "normalizedcqn.RData", sep="/"), compress="xz")    
     
 }##########################################################################
 {##Multidimesional PCA noise analysis
@@ -252,12 +274,13 @@ names(normalized.cqnMelt) <- c("EntrezID", "Sample", "Expression")
 ##Expression density
 p<-ggplot(data=normalized.cqnMelt,  
     aes(x=Expression, group=Sample, colour=Sample))+geom_density()
-p
+ggsave(paste(PLOTSDIR, "expression_densisty.png", sep="/"))
 
 ##Expression boxplot
 p<-ggplot(data=normalized.cqnMelt,aes(y=Expression, x=Sample, group=Sample,    
     colour=Sample))+geom_boxplot()
-p
+ggsave(paste(PLOTSDIR, "expression_boxplot.png", sep="/"))
+
 
 ##########################################
 #### PCA EXPLORATION
@@ -275,8 +298,9 @@ summary(pca.results)$importance[,1:10]
 
 proportion<-round(summary(pca.results)$importance[2,]*100,0)
 ## Variance explained by each component
+jpeg(paste(PLOTSDIR, "PCA.jpg", sep="/"))
 screeplot(pca.results)
-
+dev.off()
 
 ## Scatter plot on 1-3 PCA components
 Group <- normalized.cqn$Targets$Group
@@ -285,14 +309,14 @@ p12<-ggplot(data=as.data.frame(pca.results$x),
     geom_point(size=5)+
     xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
     ylab(paste("PC 2 ", proportion[2], "%", sep = ""))
-p12
+ggsave(paste(PLOTSDIR, "PCA_1-2.png", sep="/"))
 
 p13<-ggplot(data=as.data.frame(pca.results$x), 
         aes(x=PC1, y=PC3, colour=Group, shape=Group))+
     geom_point(size=5)+
     xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
     ylab(paste("PC 3 ", proportion[3], "%", sep = ""))
-p13
+ggsave(paste(PLOTSDIR, "PCA_1-3.png", sep="/"))
 #No need to filter samples, they can be accurately clustered
 }##########################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
