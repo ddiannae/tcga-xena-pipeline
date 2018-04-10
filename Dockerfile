@@ -10,5 +10,5 @@ COPY --from=builder /usr/local/lib/R/site-library /usr/local/lib/R/site-library
 RUN apt-get update && \
 apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev
 COPY gdc-client /usr/local/bin/
-COPY ["start.sh", "Biomart_EnsemblG91_GRCh38_p10.txt", "01_GetTheData.R", "02_QC.R", "/home/rstudio/"]
+COPY ["start.sh", "Biomart_EnsemblG91_GRCh38_p10.txt", "01_GetTheData.R", "02_QC.R", "/"]
 
