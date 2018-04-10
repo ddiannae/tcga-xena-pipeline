@@ -109,67 +109,67 @@ mydata <- NOISeq::readData(
 {## Plots
 ##########################################
 ## Biodetection plot
-mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
-par(mfrow = c(1,1))
-jpeg(paste(PLOTSDIR, "biodetection.jpg", sep="/"))
-explo.plot(mybiodetection)
-dev.off()
-#What do we need to see here?
-
-## Count distribution per biotype
-mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
-jpeg(paste(PLOTSDIR, "countsbio.jpg", sep="/"))
-explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
-dev.off()
-#What about expression level?
-
-## Saturation plot
-mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
-jpeg(paste(PLOTSDIR, "saturation.jpg", sep="/"))
-explo.plot(mysaturation, toplot="protein_coding", 
-    samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
-dev.off()
-#What about the depth of our samples?    
-
-## Count distribution per sample
-mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
-jpeg(paste(PLOTSDIR, "protein_coding_boxplot.jpg", sep="/"))
-explo.plot(mycountsbio, toplot = "protein_coding", 
-    samples = NULL, plottype = "boxplot")
-dev.off()
-jpeg(paste(PLOTSDIR, "protein_coding_barplot.jpg", sep="/"))
-explo.plot(mycountsbio, toplot = "protein_coding", 
-    samples = NULL, plottype = "barplot")
-dev.off()
-mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
-## Count distribution per Experimental factors
-jpeg(paste(PLOTSDIR, "protein_coding_boxplot_group.jpg", sep="/"))
-explo.plot(mycountsbio, toplot = "protein_coding", 
-    samples = NULL, plottype = "boxplot")
-dev.off()
-jpeg(paste(PLOTSDIR, "protein_coding_barplot_group.jpg", sep="/"))
-explo.plot(mycountsbio, toplot = "protein_coding", 
-    samples = NULL, plottype = "barplot")
-dev.off()
+# mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
+# par(mfrow = c(1,1))
+# jpeg(paste(PLOTSDIR, "biodetection.jpg", sep="/"))
+# explo.plot(mybiodetection)
+# dev.off()
+# #What do we need to see here?
+# 
+# ## Count distribution per biotype
+# mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+# jpeg(paste(PLOTSDIR, "countsbio.jpg", sep="/"))
+# explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
+# dev.off()
+# #What about expression level?
+# 
+# ## Saturation plot
+# mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
+# jpeg(paste(PLOTSDIR, "saturation.jpg", sep="/"))
+# explo.plot(mysaturation, toplot="protein_coding", 
+#     samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
+# dev.off()
+# #What about the depth of our samples?    
+# 
+# ## Count distribution per sample
+# mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+# jpeg(paste(PLOTSDIR, "protein_coding_boxplot.jpg", sep="/"))
+# explo.plot(mycountsbio, toplot = "protein_coding", 
+#     samples = NULL, plottype = "boxplot")
+# dev.off()
+# jpeg(paste(PLOTSDIR, "protein_coding_barplot.jpg", sep="/"))
+# explo.plot(mycountsbio, toplot = "protein_coding", 
+#     samples = NULL, plottype = "barplot")
+# dev.off()
+# mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
+# ## Count distribution per Experimental factors
+# jpeg(paste(PLOTSDIR, "protein_coding_boxplot_group.jpg", sep="/"))
+# explo.plot(mycountsbio, toplot = "protein_coding", 
+#     samples = NULL, plottype = "boxplot")
+# dev.off()
+# jpeg(paste(PLOTSDIR, "protein_coding_barplot_group.jpg", sep="/"))
+# explo.plot(mycountsbio, toplot = "protein_coding", 
+#     samples = NULL, plottype = "barplot")
+# dev.off()
 #How much sensitivity we loose? 
 }##########################################
 {##Bias
 ##########################################
-## Length bias detection
-mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
-par(mfrow = c(1,2))
-jpeg(paste(PLOTSDIR, "lengthbias.jpg", sep="/"))
-explo.plot(mylengthbias, samples=1:2)
-dev.off()
-#Do we see a clear pattern?
-
-##GC bias
-mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
-par(mfrow = c(1,2))
-jpeg(paste(PLOTSDIR, "GCbias.jpg", sep="/"))
-explo.plot(mygcbiasRaw)
-dev.off()
-#Do we see a clear pattern?
+# ## Length bias detection
+# mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
+# par(mfrow = c(1,2))
+# jpeg(paste(PLOTSDIR, "lengthbias.jpg", sep="/"))
+# explo.plot(mylengthbias, samples=1:2)
+# dev.off()
+# #Do we see a clear pattern?
+# 
+# ##GC bias
+# mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
+# par(mfrow = c(1,2))
+# jpeg(paste(PLOTSDIR, "GCbias.jpg", sep="/"))
+# explo.plot(mygcbiasRaw)
+# dev.off()
+# #Do we see a clear pattern?
 
 ## RNA composition
 mycomp <- dat(mydata, norm=FALSE, type="cd")
