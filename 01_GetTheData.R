@@ -38,7 +38,7 @@
 ###############################################################################
 ##Get the Work and Data dir
 ###############################################################################
-DATADIR <- 'data/'
+DATADIR <- '/pipeline/data/'
 args <- commandArgs(trailingOnly = TRUE)
 DATADIR <- args[1]
 RDATA <- paste(DATADIR, "rdata", sep="")
@@ -63,7 +63,7 @@ options(width=80)
 ##      -Save clean data
 ##############################################################################
 cat('Checking normal samples \n')
-normalFiles<-dir(full.names=TRUE,
+normalFiles<-dir(full.names=TRUE, pattern = "*.htseq.counts",
     path= paste(DATADIR, "counts/healthy", sep=""))
 normal<-bplapply(normalFiles, read.delim, sep="\t", header=F, col.names=c("EnsemblID", "raw_counts"))
 length(normal)
@@ -119,7 +119,7 @@ cat('NormalRaw.RData saved \n')
 ##      -Save clean data
 ##############################################################################
 cat('Checking tumor samples \n')
-tumorFiles<-dir(full.names=TRUE,
+tumorFiles<-dir(full.names=TRUE, pattern = "*.htseq.counts",
     path=paste(DATADIR, "counts/cancer", sep=""))
 tumor<-bplapply(tumorFiles, read.delim, sep="\t", header=F, col.names=c("EnsemblID", "raw_counts"))
 length(tumor)

@@ -1,4 +1,4 @@
-###############################################################################
+##############################################################################
 ## CHROMATIN AND GENE REGULATION: FROM GENE TO GENOME FOLDING
 ## Practical session: In silico analysis of RNA-Seq data.
 ###############################################################################
@@ -62,12 +62,15 @@ options(width=80)
 ###############################################################################
 ##Quality Control
 ###############################################################################
-DATADIR <- 'data/'
+DATADIR <- '/pipeline/data/'
 args <- commandArgs(trailingOnly = TRUE)
 DATADIR <- args[1]
 RDATA <- paste(DATADIR, "rdata", sep="")
 PLOTSDIR <-paste(DATADIR, "plots", sep="")
 dir.create(PLOTSDIR)
+w <- 1024
+h <- 1024
+p <- 24
 
 load(file=paste(RDATA, "RawFull.RData", sep="/"))
 {###Let's keep only the GC & length annotated genes
@@ -94,8 +97,6 @@ row.names(full$Targets)<-full$Targets$ID
 full$Targets$Group<-factor(substr(full$Targets$ID, start=1, stop=1))
 nsamples = table(full$Targets$Group)[1]
 tsamples = table(full$Targets$Group)[2]
-#   N   T 
-#  3  3 
 
 mydata <- NOISeq::readData(
   data = full$M, 
@@ -108,72 +109,73 @@ mydata <- NOISeq::readData(
 }##########################################
 {## Plots
 ##########################################
-## Biodetection plot
-# mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
-# par(mfrow = c(1,1))
-# jpeg(paste(PLOTSDIR, "biodetection.jpg", sep="/"))
-# explo.plot(mybiodetection)
-# dev.off()
-# #What do we need to see here?
-# 
-# ## Count distribution per biotype
-# mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
-# jpeg(paste(PLOTSDIR, "countsbio.jpg", sep="/"))
-# explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
-# dev.off()
-# #What about expression level?
-# 
-# ## Saturation plot
-# mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
-# jpeg(paste(PLOTSDIR, "saturation.jpg", sep="/"))
-# explo.plot(mysaturation, toplot="protein_coding", 
-#     samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
-# dev.off()
-# #What about the depth of our samples?    
-# 
-# ## Count distribution per sample
-# mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
-# jpeg(paste(PLOTSDIR, "protein_coding_boxplot.jpg", sep="/"))
-# explo.plot(mycountsbio, toplot = "protein_coding", 
-#     samples = NULL, plottype = "boxplot")
-# dev.off()
-# jpeg(paste(PLOTSDIR, "protein_coding_barplot.jpg", sep="/"))
-# explo.plot(mycountsbio, toplot = "protein_coding", 
-#     samples = NULL, plottype = "barplot")
-# dev.off()
-# mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
-# ## Count distribution per Experimental factors
-# jpeg(paste(PLOTSDIR, "protein_coding_boxplot_group.jpg", sep="/"))
-# explo.plot(mycountsbio, toplot = "protein_coding", 
-#     samples = NULL, plottype = "boxplot")
-# dev.off()
-# jpeg(paste(PLOTSDIR, "protein_coding_barplot_group.jpg", sep="/"))
-# explo.plot(mycountsbio, toplot = "protein_coding", 
-#     samples = NULL, plottype = "barplot")
-# dev.off()
+# Biodetection plot
+mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
+png(filename=paste(PLOTSDIR, "biodetection.png", sep="/"),  width=w, height=h, pointsize=p)
+explo.plot(mybiodetection)
+dev.off()
+#What do we need to see here?
+
+## Count distribution per biotype
+mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+png(filename=paste(PLOTSDIR, "countsbio.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
+dev.off()
+#What about expression level?
+
+## Count distribution per sample
+mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+png(paste(PLOTSDIR, "protein_coding_boxplot.png", sep="/"), width=w*2, height=h, pointsize=p)
+explo.plot(mycountsbio, toplot = "protein_coding",
+    samples = NULL, plottype = "boxplot")
+dev.off()
+
+png(paste(PLOTSDIR, "protein_coding_barplot.png", sep="/"), width=w*2, height=h, pointsize=p)
+explo.plot(mycountsbio, toplot = "protein_coding",
+    samples = NULL, plottype = "barplot")
+dev.off()
+
+mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
+## Count distribution per Experimental factors
+png(paste(PLOTSDIR, "protein_coding_boxplot_group.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mycountsbio, toplot = "protein_coding",
+    samples = NULL, plottype = "boxplot")
+dev.off()
+
+png(paste(PLOTSDIR, "protein_coding_barplot_group.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mycountsbio, toplot = "protein_coding",
+    samples = NULL, plottype = "barplot")
+dev.off()
 #How much sensitivity we loose? 
+
+## Saturation plot
+mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
+png(paste(PLOTSDIR, "saturation.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mysaturation, toplot="protein_coding",
+           samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
+dev.off()
+#What about the depth of our samples?
+
 }##########################################
 {##Bias
 ##########################################
-# ## Length bias detection
-# mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
-# par(mfrow = c(1,2))
-# jpeg(paste(PLOTSDIR, "lengthbias.jpg", sep="/"))
-# explo.plot(mylengthbias, samples=1:2)
-# dev.off()
-# #Do we see a clear pattern?
-# 
-# ##GC bias
-# mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
-# par(mfrow = c(1,2))
-# jpeg(paste(PLOTSDIR, "GCbias.jpg", sep="/"))
-# explo.plot(mygcbiasRaw)
-# dev.off()
-# #Do we see a clear pattern?
+## Length bias detection
+mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
+png(paste(PLOTSDIR, "lengthbias.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mylengthbias, samples=1:2)
+dev.off()
+#Do we see a clear pattern?
+
+##GC bias
+mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
+png(paste(PLOTSDIR, "GCbias.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mygcbiasRaw)
+dev.off()
+#Do we see a clear pattern?
 
 ## RNA composition
 mycomp <- dat(mydata, norm=FALSE, type="cd")
-jpeg(paste(PLOTSDIR, "RNAComposition.jpg", sep="/"))
+png(paste(PLOTSDIR, "RNAComposition.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycomp, samples=1:12)
 dev.off()
 #Are the samples comparable?
@@ -231,23 +233,21 @@ mydataCQN <- NOISeq::readData(
 ## Length bias?
 mylengthbias <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE,
     type="lengthbias")
-par(mfrow = c(1,2))
-jpeg(paste(PLOTSDIR, "lengthbias_new.jpg", sep="/"))
+png(paste(PLOTSDIR, "lengthbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
 explo.plot(mylengthbias, samples = 1:2)
 dev.off()
 #Was it corrected?
 
 ##GC bias?
 mygcbiasRaw <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE, type="GCbias")
-par(mfrow = c(1,2))
-jpeg(paste(PLOTSDIR, "GCbias_new.jpg", sep="/"))
+png(paste(PLOTSDIR, "GCbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
 explo.plot(mygcbiasRaw)
 dev.off()
 #Was it corrected?
 
 ## RNA composition?
 mycomp <- dat(mydataCQN, norm=TRUE, type = "cd")
-jpeg(paste(PLOTSDIR, "RNAComposition_new.jpg", sep="/"))
+png(paste(PLOTSDIR, "RNAComposition_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
 explo.plot(mycomp, samples=1:12)
 dev.off()
 table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
@@ -287,18 +287,10 @@ ggsave(paste(PLOTSDIR, "expression_boxplot.png", sep="/"))
 ##########################################
 pca.results<-prcomp(t(normalized.cqn$M))
 summary(pca.results)$importance[,1:10]
-# PC1      PC2      PC3      PC4      PC5      PC6
-# Standard deviation     63.96480 42.87586 36.63182 34.20711 29.15849 27.80530
-# Proportion of Variance  0.21175  0.09514  0.06945  0.06056  0.04400  0.04001
-# Cumulative Proportion   0.21175  0.30689  0.37634  0.43690  0.48090  0.52091
-# PC7      PC8      PC9     PC10
-# Standard deviation     25.88505 24.07073 23.44858 22.92690
-# Proportion of Variance  0.03468  0.02999  0.02846  0.02720
-# Cumulative Proportion   0.55559  0.58557  0.61403  0.64123
 
 proportion<-round(summary(pca.results)$importance[2,]*100,0)
 ## Variance explained by each component
-jpeg(paste(PLOTSDIR, "PCA.jpg", sep="/"))
+png(paste(PLOTSDIR, "PCA.png", sep="/"), width=w, height=h, pointsize=p)
 screeplot(pca.results)
 dev.off()
 
