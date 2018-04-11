@@ -1,4 +1,4 @@
-FROM r-base AS builder
+FROM rocker/r-base AS builder
 RUN apt-get update && \
 apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev
 COPY 00_InstallPackages.R . 
