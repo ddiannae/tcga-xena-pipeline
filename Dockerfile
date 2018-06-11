@@ -1,14 +1,12 @@
-FROM rocker/r-base AS builder
+FROM rocker/rstudio:3.4.4 AS builder
 RUN apt-get update && \
-apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev
+  apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev zlib1g-dev 
 COPY 00_InstallPackages.R . 
 RUN R -f 00_InstallPackages.R
 
-FROM rocker/rstudio 
+FROM rocker/rstudio:3.4.4
 WORKDIR /pipeline
 COPY --from=builder /usr/local/lib/R/site-library /usr/local/lib/R/site-library
-RUN apt-get update && \
-apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev
-COPY gdc-client /usr/local/bin/
-COPY ["start.sh", "Biomart_EnsemblG91_GRCh38_p10.txt", "01_GetTheData.R", "02_QC.R", "/"]
-
+COPY ["Biomart_EnsemblG91_GRCh38_p10.txt", "01_GetTheData.R", "02_QC.R", "/pipeline/"]
+RUN apt-get update \
+  && apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev zlib1g-dev 

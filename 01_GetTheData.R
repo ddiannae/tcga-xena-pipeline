@@ -66,39 +66,21 @@ cat('Checking normal samples \n')
 normalFiles<-dir(full.names=TRUE, pattern = "*.htseq.counts",
     path= paste(DATADIR, "counts/healthy", sep=""))
 normal<-bplapply(normalFiles, read.delim, sep="\t", header=F, col.names=c("EnsemblID", "raw_counts"))
-length(normal)
-# [1] 3
-
-##Exploring the first sample
-head(normal[[1]])
-#       EnsemblID  raw_counts
-# 1 ENSG00000000003.13 2433
-# 2  ENSG00000000005.5  880
-# 3 ENSG00000000419.11 1248
-# 4 ENSG00000000457.12  738
-# 5 ENSG00000000460.15  196
-# 6 ENSG00000000938.11 4961
 
 ##Check if all samples have the same size
 size<-unique(do.call(rbind,lapply(normal, dim)))
-size
-#       [,1] [,2]
-# [1,] 60488    2
 stopifnot(nrow(size)==1)
 cat('Normal samples have the same size \n')
 
 ##Check if the genes match positions
 genes<-do.call(cbind,lapply(normal, function(x)as.character(x[,1])))
 genes<-t(unique(t(genes)))
-dim(genes)
-# [1] 60488     1
 stopifnot(dim(genes)==c(size[1,1], 1))
 cat('Genes in normal samples match positions \n')
 
 ##Let's keep only the raw counts
 normal<-do.call(cbind, lapply(normal, function(x)x[,"raw_counts"]))
-targets<-data.frame(File=normalFiles, 
-    ID=paste("N", 1:length(normalFiles), sep=""))
+targets<-data.frame(File=normalFiles, ID=paste("N", 1:length(normalFiles), sep=""))
 colnames(normal)<-targets$ID
 
 ##Let's change the annotation 
@@ -122,39 +104,21 @@ cat('Checking tumor samples \n')
 tumorFiles<-dir(full.names=TRUE, pattern = "*.htseq.counts",
     path=paste(DATADIR, "counts/cancer", sep=""))
 tumor<-bplapply(tumorFiles, read.delim, sep="\t", header=F, col.names=c("EnsemblID", "raw_counts"))
-length(tumor)
-# [1] 3
-
-##Exploring the first sample
-head(tumor[[1]])
-#  EnsemblID            raw_counts
-# 1 ENSG00000000003.13       1225
-# 2  ENSG00000000005.5          1
-# 3 ENSG00000000419.11       1646
-# 4 ENSG00000000457.12       3351
-# 5 ENSG00000000460.15        970
-# 6 ENSG00000000938.11        283
 
 ##Check if all samples have the same size
 size<-unique(do.call(rbind,lapply(tumor, dim)))
-size
-#     [,1]    [,2]
-# [1,] 60488    2
 stopifnot(nrow(size)==1)
 cat('Tumor samples have the same size \n')
 
 ##Check if the genes match positions
 genes<-do.call(cbind,lapply(tumor, function(x)as.character(x[,1])))
 genes<-t(unique(t(genes)))
-dim(genes)
-# [1] 60488     1
 stopifnot(dim(genes)==c(size[1,1], 1))
 cat('Genes in tumor samples match positions \n')
 
 ##Lets keep only the raw counts
 tumor<-do.call(cbind, lapply(tumor, function(x)x[,"raw_counts"]))
-targets<-data.frame(File=tumorFiles,
-    ID=paste("T", 1:length(tumorFiles), sep=""))
+targets<-data.frame(File=tumorFiles, ID=paste("T", 1:length(tumorFiles), sep=""))
 colnames(tumor)<-targets$ID
 
 ##Let's change the annotation
@@ -175,9 +139,8 @@ cat('TumorRaw.RData saved \n')
 ###############################################################################
 ## Read the file
 cat('Working with annotation file: Biomart_EnsemblG91_GRCh38_p10.txt \n')
-annot<-read.delim(file="/Biomart_EnsemblG91_GRCh38_p10.txt", sep="\t")
-dim(annot)
-# [1] 63967     7
+annot<-read.delim(file="/pipeline/Biomart_EnsemblG91_GRCh38_p10.txt", sep="\t")
+
 names(annot)<-c("EnsemblID", "Chr", "Start", "End", "GC", "Symbol", "Type")
 annot$Length<-abs(annot$End - annot$Start)
 
@@ -196,31 +159,13 @@ annot<-as.data.frame(annot)
 levels(annot$Chr)
 annot<-annot[annot$Chr%in%c(as.character(1:22), "X", "Y"),]
 annot$Chr<-droplevels(annot$Chr)
-table(annot$Chr)
-#   1   10   11   12   13   14   15   16   17   18   19    2   20   21   22    3   
-# 5263 2206 3251 2959 1310 2212 2153 2505 3014 1174 2953 3985 1391  837 1343 3024
-#   4    5    6    7    8    9    X    Y 
-# 2503 2868 2860 2886 2380 2245 2367  517 
 cat('Non conventional chromosomes removed \n')
 
-# There are no NA EnsemblID and no empty Symbols 
-# ##Keep only annotated EnsemblID individuals
-# annot<-annot[!is.na(annot$EnsemblID), ]
-# 
-# ##Remove the ones without Symbol
-# annot<-annot[annot$Symbol!="", ]
+##Keep only annotated EnsemblID individuals
+annot<-annot[!is.na(annot$EnsemblID), ]
 
-head(annot)
-#    EnsemblID Chr     Start       End    GC    Symbol     Type Length
-# 1 ENSG00000283891  15  55372940  55373034 41.05    MIR628    miRNA     94
-# 2 ENSG00000251931  12  59450673  59450772 33.00 RNU6-871P    snRNA     99
-# 3 ENSG00000207766  15  41691585  41691678 31.91    MIR626    miRNA     93
-# 5 ENSG00000276678   3  10287413  10287482 47.14    GHRLOS misc_RNA     69
-# 6 ENSG00000207260   4 109992325 109992431 43.93  RNU6-35P    snRNA    106
-# 7 ENSG00000265993  14  67441855  67441930 53.95   MIR5694    miRNA     75
-
-dim(annot)
-# [1] 58206     8
+##Remove the ones without Symbol
+annot<-annot[annot$Symbol!="", ]
 
 ## Save clean data
 save(annot, file=paste(RDATA, "annot.RData", sep="/"), compress="xz")

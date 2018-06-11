@@ -75,17 +75,9 @@ p <- 24
 load(file=paste(RDATA, "RawFull.RData", sep="/"))
 {###Let's keep only the GC & length annotated genes
 ids<-!is.na(full$Annot$GC) & !is.na(full$Annot$Length)
-table(ids)
-# FALSE  TRUE 
-#  1083 19449
 
 full$M<-full$M[ids,]
 full$Annot<-full$Annot[ids,]
-
-dim(full$M)
-# [1] 56963     6
-dim(full$Annot)
-# [1] 56963    10
 
 }##########################################
 ## EXPLORATORY ANALYSIS (NOISeq package)
@@ -183,7 +175,7 @@ dev.off()
 ## Quality Control Report
 ##########################
 #A complete pdf report can be obtained using this function.
-#QCreport(mydata, factor="Group")
+QCreport(mydata, factor="Group", file=paste(PLOTSDIR, "QCReport.pdf", sep="/"))
 
 ###########################################################################
 ##Basal situation
@@ -191,18 +183,11 @@ dev.off()
 ##  Gene Length bias: Detected
 ##  RNA content bias: Detected
 ###########################################################################
-table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
-# FAILED PASSED 
-#     30      6 
-   
 }#############################
 {## CQN Correction
 #############################
 ##Filter genes with mean < 10, i ., low expressionm genes
 expressedGenes<- apply(full$M, 1, function(x) mean(x)>10)
-table(expressedGenes)
-# FALSE  TRUE 
-#  2431 17018
 
 ##Filtering low expression genes
 mean10<-list(M=full$M[expressedGenes, ], Annot=full$Annot[expressedGenes, ],
