@@ -103,7 +103,7 @@ mydata <- NOISeq::readData(
 ##########################################
 # Biodetection plot
 mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
-png(filename=paste(PLOTSDIR, "biodetection.png", sep="/"),  width=w, height=h, pointsize=p)
+png(filename=paste(PLOTSDIR, "biodetection.Rd_%03d.png", sep="/"),  width=w, height=h, pointsize=p)
 explo.plot(mybiodetection)
 dev.off()
 #What do we need to see here?
@@ -175,7 +175,7 @@ dev.off()
 ## Quality Control Report
 ##########################
 #A complete pdf report can be obtained using this function.
-QCreport(mydata, factor="Group", file=paste(PLOTSDIR, "QCReport.pdf", sep="/"))
+#QCreport(mydata, factor="Group", file=paste(PLOTSDIR, "QCReport.pdf", sep="/"))
 
 ###########################################################################
 ##Basal situation
@@ -185,115 +185,115 @@ QCreport(mydata, factor="Group", file=paste(PLOTSDIR, "QCReport.pdf", sep="/"))
 ###########################################################################
 }#############################
 {## CQN Correction
-#############################
-##Filter genes with mean < 10, i ., low expressionm genes
-expressedGenes<- apply(full$M, 1, function(x) mean(x)>10)
-
-##Filtering low expression genes
-mean10<-list(M=full$M[expressedGenes, ], Annot=full$Annot[expressedGenes, ],
-    Targets=full$Targets)
-
-##Length, GC content and size correction
-y_DESeq<-DESeqDataSetFromMatrix(countData=mean10$M, 
-    colData=mean10$Targets, design= ~Group)
-y_DESeq<-estimateSizeFactors(y_DESeq)
-
-cqn.mean10<- cqn(mean10$M, lengths=mean10$Annot$Length,
- x = mean10$Annot$GC, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
-# RQ fit .....................................
-# SQN Using 'sigma' instead 'sig2' (= sigma^2) is preferred now
-
-##Normalized expression log2 scale
-normalized.cqn <- cqn.mean10$y + cqn.mean10$offset
-
-##Check the correction with NOISEQ
-mydataCQN <- NOISeq::readData(
-  data = normalized.cqn, 
-  length = mean10$Annot[, c("EnsemblID", "Length")], 
-  biotype = mean10$Annot[, c("EnsemblID", "Type")], 
-  chromosome = mean10$Annot[, c("Chr", "Start", "End")], 
-  factors = mean10$Targets[, "Group",drop=FALSE], 
-  gc = mean10$Annot[, c("EnsemblID", "GC")])
-
-## Length bias?
-mylengthbias <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE,
-    type="lengthbias")
-png(paste(PLOTSDIR, "lengthbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
-explo.plot(mylengthbias, samples = 1:2)
-dev.off()
-#Was it corrected?
-
-##GC bias?
-mygcbiasRaw <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE, type="GCbias")
-png(paste(PLOTSDIR, "GCbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
-explo.plot(mygcbiasRaw)
-dev.off()
-#Was it corrected?
-
-## RNA composition?
-mycomp <- dat(mydataCQN, norm=TRUE, type = "cd")
-png(paste(PLOTSDIR, "RNAComposition_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
-explo.plot(mycomp, samples=1:12)
-dev.off()
-table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
-# FAILED PASSED 
-#     22     14 
-#Was it corrected? Which one is better?
-
-##Cleanning up
-#mean10 has the raw counts above mean > 10
-normalized.cqn<-list(M=normalized.cqn, Annot=mean10$Annot, 
-    Targets=mean10$Targets, cqn=cqn.mean10)
-
-save(mean10, file=paste(RDATA, "mean10.RData", sep="/"), compress="xz")        
-save(normalized.cqn, file=paste(RDATA, "normalizedcqn.RData", sep="/"), compress="xz")    
+# #############################
+# ##Filter genes with mean < 10, i ., low expressionm genes
+# expressedGenes<- apply(full$M, 1, function(x) mean(x)>10)
+# 
+# ##Filtering low expression genes
+# mean10<-list(M=full$M[expressedGenes, ], Annot=full$Annot[expressedGenes, ],
+#     Targets=full$Targets)
+# 
+# ##Length, GC content and size correction
+# y_DESeq<-DESeqDataSetFromMatrix(countData=mean10$M, 
+#     colData=mean10$Targets, design= ~Group)
+# y_DESeq<-estimateSizeFactors(y_DESeq)
+# 
+# cqn.mean10<- cqn(mean10$M, lengths=mean10$Annot$Length,
+#  x = mean10$Annot$GC, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
+# # RQ fit .....................................
+# # SQN Using 'sigma' instead 'sig2' (= sigma^2) is preferred now
+# 
+# ##Normalized expression log2 scale
+# normalized.cqn <- cqn.mean10$y + cqn.mean10$offset
+# 
+# ##Check the correction with NOISEQ
+# mydataCQN <- NOISeq::readData(
+#   data = normalized.cqn, 
+#   length = mean10$Annot[, c("EnsemblID", "Length")], 
+#   biotype = mean10$Annot[, c("EnsemblID", "Type")], 
+#   chromosome = mean10$Annot[, c("Chr", "Start", "End")], 
+#   factors = mean10$Targets[, "Group",drop=FALSE], 
+#   gc = mean10$Annot[, c("EnsemblID", "GC")])
+# 
+# ## Length bias?
+# mylengthbias <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE,
+#     type="lengthbias")
+# png(paste(PLOTSDIR, "lengthbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
+# explo.plot(mylengthbias, samples = 1:2)
+# dev.off()
+# #Was it corrected?
+# 
+# ##GC bias?
+# mygcbiasRaw <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE, type="GCbias")
+# png(paste(PLOTSDIR, "GCbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
+# explo.plot(mygcbiasRaw)
+# dev.off()
+# #Was it corrected?
+# 
+# ## RNA composition?
+# mycomp <- dat(mydataCQN, norm=TRUE, type = "cd")
+# png(paste(PLOTSDIR, "RNAComposition_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
+# explo.plot(mycomp, samples=1:12)
+# dev.off()
+# table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
+# # FAILED PASSED 
+# #     22     14 
+# #Was it corrected? Which one is better?
+# 
+# ##Cleanning up
+# #mean10 has the raw counts above mean > 10
+# normalized.cqn<-list(M=normalized.cqn, Annot=mean10$Annot, 
+#     Targets=mean10$Targets, cqn=cqn.mean10)
+# 
+# save(mean10, file=paste(RDATA, "mean10.RData", sep="/"), compress="xz")        
+# save(normalized.cqn, file=paste(RDATA, "normalizedcqn.RData", sep="/"), compress="xz")    
     
 }##########################################################################
 {##Multidimesional PCA noise analysis
 ##########################################################################
 ## Distribution exploration
 ##########################################
-normalized.cqnMelt<-melt(normalized.cqn$M)
-names(normalized.cqnMelt) <- c("EntrezID", "Sample", "Expression")
-
-##Expression density
-p<-ggplot(data=normalized.cqnMelt,  
-    aes(x=Expression, group=Sample, colour=Sample))+geom_density()
-ggsave(paste(PLOTSDIR, "expression_densisty.png", sep="/"))
-
-##Expression boxplot
-p<-ggplot(data=normalized.cqnMelt,aes(y=Expression, x=Sample, group=Sample,    
-    colour=Sample))+geom_boxplot()
-ggsave(paste(PLOTSDIR, "expression_boxplot.png", sep="/"))
-
-
-##########################################
-#### PCA EXPLORATION
-##########################################
-pca.results<-prcomp(t(normalized.cqn$M))
-summary(pca.results)$importance[,1:10]
-
-proportion<-round(summary(pca.results)$importance[2,]*100,0)
-## Variance explained by each component
-png(paste(PLOTSDIR, "PCA.png", sep="/"), width=w, height=h, pointsize=p)
-screeplot(pca.results)
-dev.off()
-
-## Scatter plot on 1-3 PCA components
-Group <- normalized.cqn$Targets$Group
-p12<-ggplot(data=as.data.frame(pca.results$x), 
-        aes(x=PC1, y=PC2, colour=Group, shape=Group))+
-    geom_point(size=5)+
-    xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
-    ylab(paste("PC 2 ", proportion[2], "%", sep = ""))
-ggsave(paste(PLOTSDIR, "PCA_1-2.png", sep="/"))
-
-p13<-ggplot(data=as.data.frame(pca.results$x), 
-        aes(x=PC1, y=PC3, colour=Group, shape=Group))+
-    geom_point(size=5)+
-    xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
-    ylab(paste("PC 3 ", proportion[3], "%", sep = ""))
-ggsave(paste(PLOTSDIR, "PCA_1-3.png", sep="/"))
+# normalized.cqnMelt<-melt(normalized.cqn$M)
+# names(normalized.cqnMelt) <- c("EntrezID", "Sample", "Expression")
+# 
+# ##Expression density
+# p<-ggplot(data=normalized.cqnMelt,  
+#     aes(x=Expression, group=Sample, colour=Sample))+geom_density()
+# ggsave(paste(PLOTSDIR, "expression_densisty.png", sep="/"))
+# 
+# ##Expression boxplot
+# p<-ggplot(data=normalized.cqnMelt,aes(y=Expression, x=Sample, group=Sample,    
+#     colour=Sample))+geom_boxplot()
+# ggsave(paste(PLOTSDIR, "expression_boxplot.png", sep="/"))
+# 
+# 
+# ##########################################
+# #### PCA EXPLORATION
+# ##########################################
+# pca.results<-prcomp(t(normalized.cqn$M))
+# summary(pca.results)$importance[,1:10]
+# 
+# proportion<-round(summary(pca.results)$importance[2,]*100,0)
+# ## Variance explained by each component
+# png(paste(PLOTSDIR, "PCA.png", sep="/"), width=w, height=h, pointsize=p)
+# screeplot(pca.results)
+# dev.off()
+# 
+# ## Scatter plot on 1-3 PCA components
+# Group <- normalized.cqn$Targets$Group
+# p12<-ggplot(data=as.data.frame(pca.results$x), 
+#         aes(x=PC1, y=PC2, colour=Group, shape=Group))+
+#     geom_point(size=5)+
+#     xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
+#     ylab(paste("PC 2 ", proportion[2], "%", sep = ""))
+# ggsave(paste(PLOTSDIR, "PCA_1-2.png", sep="/"))
+# 
+# p13<-ggplot(data=as.data.frame(pca.results$x), 
+#         aes(x=PC1, y=PC3, colour=Group, shape=Group))+
+#     geom_point(size=5)+
+#     xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
+#     ylab(paste("PC 3 ", proportion[3], "%", sep = ""))
+# ggsave(paste(PLOTSDIR, "PCA_1-3.png", sep="/"))
 #No need to filter samples, they can be accurately clustered
 }##########################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
