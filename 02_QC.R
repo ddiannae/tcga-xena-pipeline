@@ -83,8 +83,8 @@ full$Annot<-full$Annot[ids,]
 ## EXPLORATORY ANALYSIS (NOISeq package)
 ##########################################
 {## Reading data into NOISeq package -> mydata
-row.names(full$M)<-full$Annot$EnsemblID
-row.names(full$Annot)<-full$Annot$EnsemblID
+row.names(full$M)<-full$Annot$EnsemblId
+row.names(full$Annot)<-full$AnnotdEnsemblId
 row.names(full$Targets)<-full$Targets$ID
 full$Targets$Group<-factor(substr(full$Targets$ID, start=1, stop=1))
 nsamples = table(full$Targets$Group)[1]
@@ -92,11 +92,11 @@ tsamples = table(full$Targets$Group)[2]
 
 mydata <- NOISeq::readData(
   data = full$M, 
-  length = full$Annot[, c("EnsemblID", "Length")], 
-  biotype = full$Annot[, c("EnsemblID", "Type")], 
+  length = full$Annot[, c("EnsemblId", "Length")], 
+  biotype = full$Annot[, c("EnsemblId", "Type")], 
   chromosome = full$Annot[, c("Chr", "Start", "End")], 
   factors = full$Targets[, "Group",drop=FALSE], 
-  gc = full$Annot[, c("EnsemblID", "GC")])
+  gc = full$Annot[, c("EnsemblId", "GC")])
 
 }##########################################
 {## Plots

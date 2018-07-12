@@ -1,3 +1,12 @@
+DATADIR <- '/pipeline/data/'
+args <- commandArgs(trailingOnly = TRUE)
+DATADIR <- args[1]
+RDATA <- paste(DATADIR, "rdata", sep="")
+
+###############################################################################
+##Usefull Libraries
+###############################################################################
+library("BiocParallel")
 load(file=paste(RDATA, "annot.RData", sep="/"))
 load(file=paste(RDATA, "TumorRaw.RData", sep="/"))
 load(file=paste(RDATA, "NormalRaw.RData", sep="/"))
@@ -25,11 +34,11 @@ cat('Genes from normal and tumor samples match \n')
 
 Annot<-normal$Annot
 ##Are there repeated EnsemblID?
-stopifnot(length(unique(Annot[, "EnsemblID"]))==nrow(Annot))
+stopifnot(length(unique(Annot))==nrow(Annot))
 Annot<-data.frame(Annot, stringsAsFactors=FALSE)
+colnames(Annot) <- c("EnsemblId")
 Annot$Row<-1:nrow(Annot) ##Just to maintain the original order
-
-Annot<-merge(x=Annot, y=annot, by.x="EnsemblID", by.y="EnsemblID",
+Annot<-merge(x=Annot, y=annot, by.x="EnsemblId", by.y="EnsemblId",
   all=FALSE, all.x=TRUE, all.y=FALSE, sort=FALSE)
 dim(Annot)
 # [1] 60488    10
@@ -37,6 +46,7 @@ dim(M)
 # [1] 60488     6
 nrow(Annot)-nrow(M)
 # [1] 0
+colnames(Annot)
 
 ##Are there duplicated IDs?
 Annot<-Annot[order(Annot$Row, Annot$Chr),]
@@ -47,7 +57,7 @@ if (identical(ids, integer(0))) {
 }
 
 gctable <- table(is.na(Annot$GC))
-cat("There are", gctable[[1]], "entries with GC info and", gctable[[2]], "GC entries missing \n")
+gctable
 # FALSE  TRUE 
 # 56963  3525
 
