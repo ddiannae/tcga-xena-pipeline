@@ -1,5 +1,5 @@
 cran <- c('ggplot2', 'reshape2')
-bioconductor <- c('NOISeq', 'DESeq2', 'BiocParallel', 'cqn')
+bioconductor <- c('NOISeq', 'EDASeq', 'DESeq2', 'BiocParallel', 'cqn')
 chooseCRANmirror(graphics=FALSE, ind=1)
 source('http://bioconductor.org/biocLite.R')
 BiocInstaller::biocLite(bioconductor, ask = FALSE, suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
