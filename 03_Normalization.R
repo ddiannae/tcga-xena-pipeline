@@ -1,105 +1,4 @@
-
-#################################################################################
-##QC con BioSeq
-#################################################################################
-options(width=120)
 load(file="RawFull.RData")
-
-###Nos quedamos con todo lo anotado que tiene GC y length
-ids<-!is.na(full$Annot$GC) & !is.na(full$Annot$Length)
-table(ids)
-# FALSE  TRUE 
-#  1083 19449
-
-full$M<-full$M[ids,]
-full$Annot<-full$Annot[ids,]
-
-dim(full$M)
-# [1] 19449   881
-dim(full$Annot)
-# [1] 19449    11
-
-#### 1) EXPLORATORY ANALYSIS (NOISeq package)
-#source("http://bioconductor.org/biocLite.R")
-#biocLite("NOISeq")
-library("NOISeq")
-
-## Reading data into NOISeq package
-row.names(full$M)<-full$Annot$EntrezID
-row.names(full$Annot)<-full$Annot$EntrezID
-row.names(full$Targets)<-full$Targets$ID
-#full$Annot[, c("Chr", "Start", "End")] #colnames(mychroms) = c("Chr", "GeneStart", "GeneEnd")
-full$Targets$Group<-factor(substr(full$Targets$ID, start=1, stop=1))
-table(full$Targets$Group)
-#   E   S 
-# 780 101
-mydata <- NOISeq::readData(
-  data = full$M, 
-  length = full$Annot[, c("EntrezID", "Length")], 
-  biotype = full$Annot[, c("EntrezID", "Type")], 
-  chromosome = full$Annot[, c("Chr", "Start", "End")], 
-  factors = full$Targets[, "Group",drop=FALSE], 
-  gc = full$Annot[, c("EntrezID", "GC")])
-
-##########################################
-####TODO ESTO VA EN EL QCreport ##########
-##########################################
-## Biodetection plot
-mybiodetection <- dat(mydata, type = "biodetection", factor = "Group", k = 0)
-png(file="biodetection.png")
-par(mfrow = c(1,2))
-explo.plot(mybiodetection)
-dev.off()
-## Count distribution per biotype
-mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
-png(file="countbio.png")
-explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
-dev.off()
-## Saturation plot
-mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
-png(file="saturation.png")
-explo.plot(mysaturation, toplot = "protein_coding", samples = c(1,4), yleftlim = NULL, yrightlim = NULL)
-dev.off()
-## Count distribution per sample
-png(file="Distribution.png", width=2000, height=2000)
-explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "boxplot")
-dev.off()
-png(file="DistributionBar.png", width=2000, height=2000)
-explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "barplot")
-dev.off()
-## Length bias detection
-mylengthbias <- dat(mydata, factor = "Group", norm = FALSE, type = "lengthbias")
-png(file="lengthbias.png")
-par(mfrow = c(1,2))
-explo.plot(mylengthbias, samples = 1:2)
-dev.off()
-##GC bias
-mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm = FALSE, type = "GCbias")
-png(file="GCBias.png")
-par(mfrow = c(1,2))
-explo.plot(mygcbiasRaw)
-dev.off()
-## RNA composition
-mycomp <- dat(mydata, norm = FALSE, type = "cd")
-png(file="RNA.png")
-explo.plot(mycomp, samples=1:12)
-dev.off()
-
-##########################
-## Quality Control Report
-##########################
-QCreport(mydata, factor = "Group")
-
-#################################################################################
-##Situación basal
-#################################################################################
-## GC 		Detectado
-## Longitud	Detectado
-## RNA		Detectado
-table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
-# FAILED PASSED 
-#    874      6 
-   
 #############################
 #####Normalizacion con EDASeq
 #############################
@@ -128,8 +27,8 @@ mydataM10EDA <- EDASeq::newSeqExpressionSet(
   counts=mean10$M,
   featureData=mean10$Annot,
   phenoData=data.frame(
-      conditions=mean10$Targets$Group,
-      row.names=colnames(mean10$M)))
+    conditions=mean10$Targets$Group,
+    row.names=colnames(mean10$M)))
 mydataM10EDA 
 
 ##########################################################################
@@ -257,13 +156,13 @@ library("ggplot2")
 library("reshape")
 
 p<-ggplot(data=melt(log(FULLGC_FULLLength_TMM$M+1)),
-  aes(x=value, group=X2, colour=X2))+geom_density()
+          aes(x=value, group=X2, colour=X2))+geom_density()
 pdf(file="DensityRAWFullLog.pdf")
 p
 dev.off()
 
 myfilterRaw<-filtered.data(FULLGC_FULLLength_TMM$M, factor=FULLGC_FULLLength_TMM$Targets$Group, 
-  norm=TRUE, cv.cutoff=100, cpm=10)
+                           norm=TRUE, cv.cutoff=100, cpm=10)
 # [1] "Filtering out low count features..."
 # [1] "15378 features are to be kept for differential expression analysis with filtering method 1" cpm=1
 # [1] "15281 features are to be kept for differential expression analysis with filtering method 1" cpm=10 Corrige y no es tan agresivo
@@ -283,8 +182,8 @@ nrow(FULLGC_FULLLength_TMM$M)-nrow(myfilterRaw)
 
 ##Propagando a la anotacion
 myfilterRaw<-list(M=myfilterRaw, 
-  Annot=FULLGC_FULLLength_TMM$Annot[row.names(FULLGC_FULLLength_TMM$Annot)%in%row.names(myfilterRaw),],
-  Targets=FULLGC_FULLLength_TMM$Targets)
+                  Annot=FULLGC_FULLLength_TMM$Annot[row.names(FULLGC_FULLLength_TMM$Annot)%in%row.names(myfilterRaw),],
+                  Targets=FULLGC_FULLLength_TMM$Targets)
 stopifnot(nrow(myfilterRaw$M)==nrow(myfilterRaw$Annot))
 stopifnot(row.names(myfilterRaw$M)==row.names(myfilterRaw$Annot))
 
@@ -447,10 +346,9 @@ enfermos<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol
 #Symbolos
 symbol<-as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol.y)
 ##Guardando
-#write.table(M, file = "M.tab", sep="\t", quote=FALSE, row.names=FALSE)
-#write.table(sanos, file = "Sanos.txt", sep="\t", quote=FALSE, row.names=FALSE)
-#write.table(enfermos, file = "Enfermos.txt", sep="\t", quote=FALSE, row.names=FALSE)
-#write.table(symbol, file = "ListaGenes.txt", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
-#save(FULLGC_FULLLength_TMM_CPM10_ARSYN, file="FULLGC_FULLLength_TMM_CPM10_ARSYN.RData", compress="xz")
+write.table(M, file = "M.tab", sep="\t", quote=FALSE, row.names=FALSE)
+write.table(sanos, file = "Sanos.txt", sep="\t", quote=FALSE, row.names=FALSE)
+write.table(enfermos, file = "Enfermos.txt", sep="\t", quote=FALSE, row.names=FALSE)
+write.table(symbol, file = "ListaGenes.txt", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+save(FULLGC_FULLLength_TMM_CPM10_ARSYN, file="FULLGC_FULLLength_TMM_CPM10_ARSYN.RData", compress="xz")
 
-                              
