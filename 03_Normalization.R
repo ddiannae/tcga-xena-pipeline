@@ -1,4 +1,11 @@
-load(file="RawFull.RData")
+DATADIR <- '/pipeline/data/'
+DATADIR <- args[1]
+RDATA <- paste(DATADIR, "rdata", sep="")
+PLOTSDIR <-paste(DATADIR, "plots", sep="")
+load(file=paste(RDATA, "RawFull.RData", sep="/"))
+w <- 1024
+h <- 1024
+p <- 24
 #############################
 #####Normalizacion con EDASeq
 #############################
@@ -30,7 +37,7 @@ mydataM10EDA <- EDASeq::newSeqExpressionSet(
     conditions=mean10$Targets$Group,
     row.names=colnames(mean10$M)))
 mydataM10EDA 
-
+save(mydataM10EDA, file=paste(RDATA, "Norm.RData", sep="/"), compress="xz")
 ##########################################################################
 ##save.image(file="Norm.RData", compress="xz")
 load(file="Norm.RData")
@@ -94,22 +101,25 @@ mydata <- NOISeq::readData(
   gc = mean10$Annot[, c("EntrezID", "GC")])
 
 ## Length bias detection
-mylengthbias <- dat(mydata, factor = "Group", norm = FALSE, type = "lengthbias")
-png(file=paste(base, "lengthbias.png", sep=""))
-par(mfrow = c(1,2))
-explo.plot(mylengthbias, samples = 1:2)
+
+## Length bias detection
+mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
+png(paste(PLOTSDIR, "lengthbias_corrected.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mylengthbias, samples=1:2)
 dev.off()
+#Do we see a clear pattern?
+
 ##GC bias
-mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm = FALSE, type = "GCbias")
-png(file=paste(base, "GCBias.png", sep=""))
-par(mfrow = c(1,2))
+mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
+png(paste(PLOTSDIR, "GCbias_corrected.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mygcbiasRaw)
 dev.off()
-## RNA composition
-mycomp <- dat(mydata, norm = FALSE, type = "cd")
-png(file=paste(base, "RNA.png", sep=""))
+
+mycomp <- dat(mydata, norm=FALSE, type="cd")
+png(paste(PLOTSDIR, "RNAComposition_corrected.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycomp, samples=1:12)
 dev.off()
+
 table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
 
 ##
@@ -127,15 +137,15 @@ table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
 
 mycountsbio <- dat(mydata, factor = NULL, type = "countsbio", norm=FALSE)
 ## Count distribution per sample
-png(file=paste(base, "Distribution.png", sep=""), width=2000, height=2000)
+png(file=paste(PLOTSDIR, "Distribution_corrected.png", sep="/"), width=2000, height=2000)
 explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "boxplot")
 dev.off()
-png(file=paste(base, "DistributionBar.png", sep=""), width=2000, height=2000)
+png(file=paste(PLOTSDIR, "DistributionBar_corrected.png", sep="/"), width=2000, height=2000)
 explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "barplot")
 dev.off()
 
 ##En 4 el FULLGC_FULLLength_TMM
-png(file=paste(base, "Boxplot.png", sep=""), width=2000, height=2000)
+png(file=paste(PLOTSDIR, "Boxplot_corrected.png", sep="/"), width=2000, height=2000)
 boxplot(log(data3+1))
 dev.off()
 
@@ -143,7 +153,7 @@ dev.off()
 FULLGC_FULLLength_TMM<-mean10
 FULLGC_FULLLength_TMM$M<-data3
 
-## save(FULLGC_FULLLength_TMM, file="FULLGC_FULLLength_TMM.RData", compress="xz")
+save(FULLGC_FULLLength_TMM, file=paste(RDATA, "FULLGC_FULLLength_TMM.RData", sep="/"), compress="xz")
 ##########################################################################
 ##Multidimesional PCA noise analysis
 ##########################################################################
@@ -155,10 +165,10 @@ load(file="FULLGC_FULLLength_TMM.RData")
 library("ggplot2")
 library("reshape")
 
-p<-ggplot(data=melt(log(FULLGC_FULLLength_TMM$M+1)),
+pl<-ggplot(data=melt(log(FULLGC_FULLLength_TMM$M+1)),
           aes(x=value, group=X2, colour=X2))+geom_density()
-pdf(file="DensityRAWFullLog.pdf")
-p
+pdf(file=paste(PLOTSDIR, "DensityRAWFullLog.pdf", sep="/"))
+pl
 dev.off()
 
 myfilterRaw<-filtered.data(FULLGC_FULLLength_TMM$M, factor=FULLGC_FULLLength_TMM$Targets$Group, 
@@ -188,9 +198,9 @@ stopifnot(nrow(myfilterRaw$M)==nrow(myfilterRaw$Annot))
 stopifnot(row.names(myfilterRaw$M)==row.names(myfilterRaw$Annot))
 
 
-p<-ggplot(data=melt(log(myfilterRaw$M+1)),aes(x=value, group=X2, colour=X2))+geom_density()
-pdf(file="DensityFilter10.pdf")
-p
+pl<-ggplot(data=melt(log(myfilterRaw$M+1)),aes(x=value, group=X2, colour=X2))+geom_density()
+pdf(file=paste(PLOTSDIR, "DensityFilter10.pdf", sep="/"))
+pl
 dev.off()
 
 #### 2) PCA EXPLORATION
@@ -208,12 +218,12 @@ summary(traditional.pca)$importance[,1:10]
 # Cumulative Proportion   0.14091  0.24366  0.28826  0.32253  0.34928  0.37558  0.39506  0.41244  0.42640  0.43778
 
 ## Variance explained by each component
-pdf("PCAVarianceRAW.pdf", width = 4*2, height = 4*2)
+pdf(file=paste(PLOTSDIR, "PCAVarianceRAW.pdf", sep="/"), width = 4*2, height = 4*2)
 barplot(pca.results$var.exp[,1], xlab = "PC", ylab = "explained variance", ylim = c(0,0.4))
 dev.off()
 
 ## Loading plot
-pdf("PCALoadingRaw.pdf", width = 4*2, height = 4*2)
+pdf(file=paste(PLOTSDIR, "PCALoadingRaw.pdf", sep="/"), width = 4*2, height = 4*2)
 plot(pca.results$loadings[,1:2], col = 1, pch = 20, cex = 0.5,
      xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
      ylab = paste("PC 2 ", round(pca.results$var.exp[2,1]*100,0), "%", sep = ""),
@@ -227,7 +237,7 @@ mycol <- as.character(myfilterRaw$Targets$Group)
 mycol[mycol == 'S'] <- "black"
 mycol[mycol == 'E'] <- "red2"
 
-pdf("PCAScoreRaw.pdf", width = 5*2, height = 5)
+pdf(file=paste(PLOTSDIR, "PCAScoreRaw.pdf", sep="/"), width = 5*2, height = 5)
 par(mfrow = c(1,2))
 
 # PC1 & PC2
@@ -266,12 +276,12 @@ summary(traditional.pca)$importance[,1:10]
 # Cumulative Proportion   0.14271 0.147720 0.152700 0.157590 0.162430 0.167170 0.171830 0.176440 0.18100 0.185510
 
 ## Variance explained by each component
-pdf("PCAVarianceARSyN.pdf", width = 4*2, height = 4*2)
+pdf(file=paste(PLOTSDIR, "PCAVarianceARSyN.pdf", sep="/"), width = 4*2, height = 4*2)
 barplot(pca.results$var.exp[,1], xlab = "PC", ylab = "explained variance", ylim = c(0,0.4))
 dev.off()
 
 ## Loading plot
-pdf("PCALoadingARSyN.pdf", width = 4*2, height = 4*2)
+pdf(file=paste(PLOTSDIR, "PCALoadingARSyN.pdf", sep="/"), width = 4*2, height = 4*2)
 plot(pca.results$loadings[,1:2], col = 1, pch = 20, cex = 0.5,
      xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
      ylab = paste("PC 2 ", round(pca.results$var.exp[2,1]*100,0), "%", sep = ""),
@@ -285,7 +295,7 @@ mycol <- as.character(myfilterRaw$Targets$Group)
 mycol[mycol == 'S'] <- "black"
 mycol[mycol == 'E'] <- "red2"
 
-pdf("PCAScoreARSyN.pdf", width = 5*2, height = 5)
+pdf(file=paste(PLOTSDIR, "PCAScoreARSyN.pdf", sep="/"), width = 5*2, height = 5)
 par(mfrow = c(1,2))
 
 # PC1 & PC2
@@ -314,13 +324,13 @@ dev.off()
 
 
 ##Cómo quedaron las densidades y demás con esta modificación
-pdf(file="BoxplotARSyN.pdf", width=2000, height=2000)
+pdf(file=paste(PLOTSDIR, "BoxplotARSyN.pdf", sep="/"), width=2000, height=2000)
 boxplot(myARSyN)
 dev.off()
 
-p<-ggplot(data=melt(myARSyN), aes(x=value, group=X2, colour=X2))+geom_density()
-pdf(file="DensityARSyN.pdf")
-p
+pl<-ggplot(data=melt(myARSyN), aes(x=value, group=X2, colour=X2))+geom_density()
+pdf(file=paste(PLOTSDIR, "DensityARSyN.pdf", sep="/"))
+pl
 dev.off()
 
 dim(myARSyN)
@@ -346,9 +356,9 @@ enfermos<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol
 #Symbolos
 symbol<-as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol.y)
 ##Guardando
-write.table(M, file = "M.tab", sep="\t", quote=FALSE, row.names=FALSE)
-write.table(sanos, file = "Sanos.txt", sep="\t", quote=FALSE, row.names=FALSE)
-write.table(enfermos, file = "Enfermos.txt", sep="\t", quote=FALSE, row.names=FALSE)
-write.table(symbol, file = "ListaGenes.txt", sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
-save(FULLGC_FULLLength_TMM_CPM10_ARSYN, file="FULLGC_FULLLength_TMM_CPM10_ARSYN.RData", compress="xz")
+write.table(M, file = paste(RDATA, "M.tab", sep="/"), sep="\t", quote=FALSE, row.names=FALSE)
+write.table(sanos, file = paste(RDATA, "Sanos.txt", sep="/"), sep="\t", quote=FALSE, row.names=FALSE)
+write.table(enfermos, file = paste(RDATA, "Enfermos.txt", sep="/"), sep="\t", quote=FALSE, row.names=FALSE)
+write.table(symbol, file = paste(RDATA, "ListaGenes.txt", sep="/"), sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+save(FULLGC_FULLLength_TMM_CPM10_ARSYN, file=paste(RDATA, "FULLGC_FULLLength_TMM_CPM10_ARSYN.RData", sep="/"), compress="xz")
 
