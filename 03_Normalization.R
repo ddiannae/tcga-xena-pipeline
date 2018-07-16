@@ -1,5 +1,4 @@
 DATADIR <- '/pipeline/data/'
-DATADIR <- args[1]
 RDATA <- paste(DATADIR, "rdata", sep="")
 PLOTSDIR <-paste(DATADIR, "plots", sep="")
 load(file=paste(RDATA, "RawFull.RData", sep="/"))
@@ -30,6 +29,7 @@ mean10<-list(M=full$M[genesExpressos, ], Annot=full$Annot[genesExpressos, ], Tar
 #                       GeneEnd=biomart[,3])
 
 ##Normalization
+rownames(mean10$Annot) <- rownames(mean10$M)
 mydataM10EDA <- EDASeq::newSeqExpressionSet(
   counts=mean10$M,
   featureData=mean10$Annot,
@@ -40,7 +40,7 @@ mydataM10EDA
 save(mydataM10EDA, file=paste(RDATA, "Norm.RData", sep="/"), compress="xz")
 ##########################################################################
 ##save.image(file="Norm.RData", compress="xz")
-load(file="Norm.RData")
+load(file=paste(RDATA, "Norm.RData", sep="/"))
 library("NOISeq")
 library("EDASeq")
 
@@ -94,11 +94,11 @@ data3 <- tmm(data2, long = 1000, lc = 0, k = 0)
 
 mydata <- NOISeq::readData(
   data = data3, 
-  length = mean10$Annot[, c("EntrezID", "Length")], 
-  biotype = mean10$Annot[, c("EntrezID", "Type")], 
+  length = mean10$Annot[, c("EnsemblId", "Length")], 
+  biotype = mean10$Annot[, c("EnsemblId", "Type")], 
   chromosome = mean10$Annot[, c("Chr", "Start", "End")], 
   factors = mean10$Targets[, "Group",drop=FALSE], 
-  gc = mean10$Annot[, c("EntrezID", "GC")])
+  gc = mean10$Annot[, c("EnsemblId", "GC")])
 
 ## Length bias detection
 
@@ -159,11 +159,11 @@ save(FULLGC_FULLLength_TMM, file=paste(RDATA, "FULLGC_FULLLength_TMM.RData", sep
 ##########################################################################
 library("NOISeq")
 library("EDASeq")
-load(file="FULLGC_FULLLength_TMM.RData")
+load(file=paste(RDATA, "FULLGC_FULLLength_TMM.RData", sep="/"))
 
 #### 3) NOISE FILTERING
 library("ggplot2")
-library("reshape")
+library("reshape2")
 
 pl<-ggplot(data=melt(log(FULLGC_FULLLength_TMM$M+1)),
           aes(x=value, group=X2, colour=X2))+geom_density()
