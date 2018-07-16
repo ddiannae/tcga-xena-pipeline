@@ -166,7 +166,7 @@ library("ggplot2")
 library("reshape2")
 
 pl<-ggplot(data=melt(log(FULLGC_FULLLength_TMM$M+1)),
-          aes(x=value, group=X2, colour=X2))+geom_density()
+          aes(x=value, group=Var2, colour=Var2))+geom_density()
 pdf(file=paste(PLOTSDIR, "DensityRAWFullLog.pdf", sep="/"))
 pl
 dev.off()
@@ -198,15 +198,15 @@ stopifnot(nrow(myfilterRaw$M)==nrow(myfilterRaw$Annot))
 stopifnot(row.names(myfilterRaw$M)==row.names(myfilterRaw$Annot))
 
 
-pl<-ggplot(data=melt(log(myfilterRaw$M+1)),aes(x=value, group=X2, colour=X2))+geom_density()
+pl<-ggplot(data=melt(log(myfilterRaw$M+1)),aes(x=value, group=Var2, colour=Var2))+geom_density()
 pdf(file=paste(PLOTSDIR, "DensityFilter10.pdf", sep="/"))
 pl
 dev.off()
 
 #### 2) PCA EXPLORATION
-setwd("./ARSyN")
+setwd("/pipeline/ARSyN")
 source("sourceARSyN.R")
-setwd("../")
+setwd("/pipeline")
 
 #pca.results = PCA.GENES(t(log2(1+data3)))
 pca.results <- PCA.GENES(t(log2(1+myfilterRaw$M)))
@@ -234,8 +234,8 @@ dev.off()
 
 ## Score plot
 mycol <- as.character(myfilterRaw$Targets$Group)
-mycol[mycol == 'S'] <- "black"
-mycol[mycol == 'E'] <- "red2"
+mycol[mycol == 'N'] <- "black"
+mycol[mycol == 'T'] <- "red2"
 
 pdf(file=paste(PLOTSDIR, "PCAScoreRaw.pdf", sep="/"), width = 5*2, height = 5)
 par(mfrow = c(1,2))
@@ -292,8 +292,8 @@ dev.off()
 
 ## Score plot
 mycol <- as.character(myfilterRaw$Targets$Group)
-mycol[mycol == 'S'] <- "black"
-mycol[mycol == 'E'] <- "red2"
+mycol[mycol == 'N'] <- "black"
+mycol[mycol == 'T'] <- "red2"
 
 pdf(file=paste(PLOTSDIR, "PCAScoreARSyN.pdf", sep="/"), width = 5*2, height = 5)
 par(mfrow = c(1,2))
@@ -328,7 +328,7 @@ pdf(file=paste(PLOTSDIR, "BoxplotARSyN.pdf", sep="/"), width=2000, height=2000)
 boxplot(myARSyN)
 dev.off()
 
-pl<-ggplot(data=melt(myARSyN), aes(x=value, group=X2, colour=X2))+geom_density()
+pl<-ggplot(data=melt(myARSyN), aes(x=value, group=Var2, colour=Var2))+geom_density()
 pdf(file=paste(PLOTSDIR, "DensityARSyN.pdf", sep="/"))
 pl
 dev.off()
@@ -343,18 +343,19 @@ dim(FULLGC_FULLLength_TMM_CPM10_ARSYN$M)
 stopifnot(nrow(FULLGC_FULLLength_TMM_CPM10_ARSYN$M)==nrow(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot))
 stopifnot(all(row.names(FULLGC_FULLLength_TMM_CPM10_ARSYN$M)==row.names(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot)))
 
+save(FULLGC_FULLLength_TMM_CPM10_ARSYN, file=paste(RDATA, "FULLGC_FULLLength_TMM_CPM10_ARSYN.RData", sep="/"), compress="xz")
 ##Matrices de datos para las redes
 #Todos= sanos | enfermos
 M<-as.data.frame(FULLGC_FULLLength_TMM_CPM10_ARSYN$M)
-M<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol.y), M)
+M<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$EnsemblId), M)
 #sanos
-sanos<-as.data.frame(FULLGC_FULLLength_TMM_CPM10_ARSYN$M[,FULLGC_FULLLength_TMM_CPM10_ARSYN$Targets$Group=="S"])
-sanos<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol.y), sanos)
+sanos<-as.data.frame(FULLGC_FULLLength_TMM_CPM10_ARSYN$M[,FULLGC_FULLLength_TMM_CPM10_ARSYN$Targets$Group=="N"])
+sanos<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$EnsemblId), sanos)
 #enfermos
-enfermos<-as.data.frame(FULLGC_FULLLength_TMM_CPM10_ARSYN$M[,FULLGC_FULLLength_TMM_CPM10_ARSYN$Targets$Group=="E"])
-enfermos<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol.y), enfermos)
+enfermos<-as.data.frame(FULLGC_FULLLength_TMM_CPM10_ARSYN$M[,FULLGC_FULLLength_TMM_CPM10_ARSYN$Targets$Group=="T"])
+enfermos<-cbind(gene=as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$EnsemblId), enfermos)
 #Symbolos
-symbol<-as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$Symbol.y)
+symbol<-as.character(FULLGC_FULLLength_TMM_CPM10_ARSYN$Annot$EnsemblId)
 ##Guardando
 write.table(M, file = paste(RDATA, "M.tab", sep="/"), sep="\t", quote=FALSE, row.names=FALSE)
 write.table(sanos, file = paste(RDATA, "Sanos.txt", sep="/"), sep="\t", quote=FALSE, row.names=FALSE)
