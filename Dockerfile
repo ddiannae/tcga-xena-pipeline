@@ -1,6 +1,6 @@
 FROM rocker/rstudio:3.4.4 AS builder
 RUN apt-get update && \
-  apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev zlib1g-dev 
+  apt-get -y install --fix-missing libcurl4-openssl-dev libxml2-dev zlib1g-dev libmariadb-client-lgpl-dev 
 COPY 00_InstallPackages.R . 
 RUN R -f 00_InstallPackages.R
 
