@@ -138,10 +138,10 @@ cat('TumorRaw.RData saved \n')
 ##      -Save clean data
 ###############################################################################
 ## Read the file
-cat('Working with annotation file: Biomart_EnsemblG91_GRCh38_p10.txt \n')
-annot<-read.delim(file="/pipeline/Biomart_EnsemblG91_GRCh38_p10.txt", sep="\t")
+cat('Working with annotation file: Biomart_EnsemblG93_GRCh38_p12.txt \n')
+annot<-read.delim(file="/pipeline/Biomart_EnsemblG93_GRCh38_p12.txt", sep="\t")
 
-names(annot)<-c("EnsemblID", "Chr", "Start", "End", "GC", "Symbol", "Type")
+names(annot)<-c("EnsemblID", "Chr", "Start", "End", "GC", "Type")
 annot$Length<-abs(annot$End - annot$Start)
 
 ## Exploring the header
@@ -161,12 +161,15 @@ annot<-annot[annot$Chr%in%c(as.character(1:22), "X", "Y"),]
 annot$Chr<-droplevels(annot$Chr)
 cat('Non conventional chromosomes removed \n')
 
-##Keep only annotated EnsemblID individuals
-annot<-annot[!is.na(annot$EnsemblID), ]
+uniq.annot <length(unique(annot$EnsemblID)) == nrow(uniq.annot)
+if(uniq.annot) {
+  cat('Unique EnsemblIDs in annotation file\n')
+} else {
+  cat('Repeated EnsemblIDs in annotation file. P')
+  stop()
+}
 
-##Remove the ones without Symbol
-annot<-annot[annot$Symbol!="", ]
-
+cat(paste('Annotation file. Final dimension: ', dim(annot), '\n'))
 ## Save clean data
 save(annot, file=paste(RDATA, "annot.RData", sep="/"), compress="xz")
 cat('annot.RData saved \n')
@@ -193,7 +196,7 @@ load(file=paste(RDATA, "NormalRaw.RData", sep="/"))
 
 ##M=normal|tumor
 M<-cbind(normal$Counts, tumor$Counts)
-dim(M)
+cat(paste('Total number of features and samples: ', dim(M), '\n'))
 # [1] 60488     6
 
 ##targets=normal+tumor
@@ -206,6 +209,7 @@ dim(targets)
 
 ##check M y targets integrity
 stopifnot(nrow(targets)==ncol(M))
+cat('Number of counts columns match sample number\n')
 
 ## Annot=genes|annot
 ## check if genes from normal and tumor match
@@ -215,6 +219,8 @@ cat('Genes from normal and tumor samples match \n')
 Annot<-normal$Annot
 ##Are there repeated EnsemblID?
 stopifnot(length(unique(Annot[, "EnsemblID"]))==nrow(Annot))
+cat('No duplicated EnsemblIDs\n')
+
 Annot<-data.frame(Annot, stringsAsFactors=FALSE)
 Annot$Row<-1:nrow(Annot) ##Just to maintain the original order
 head(Annot)
@@ -227,13 +233,14 @@ head(Annot)
 # ENSG00000000938.11 ENSG00000000938      11   6
 
 ##Add Biomart data
+cat('Adding biomart data\n')
 Annot<-merge(x=Annot, y=annot, by.x="EnsemblID", by.y="EnsemblID",
   all=FALSE, all.x=TRUE, all.y=FALSE, sort=FALSE)
-dim(Annot)
+cat(paste('Merged file. Final dimension:', dim(Annot), '.\n'))
 # [1] 60488    10
 dim(M)
 # [1] 60488     6
-nrow(Annot)-nrow(M)
+cat(paste('There are ', row(Annot)-nrow(M), ' extra rows in the counts matrix.\n'))
 # [1] 0
 
 ##Are there duplicated IDs?
