@@ -138,8 +138,8 @@ cat('TumorRaw.RData saved \n')
 ##      -Save clean data
 ###############################################################################
 ## Read the file
-cat('Working with annotation file: Biomart_EnsemblG93_GRCh38_p12.txt \n')
-annot<-read.delim(file="/pipeline/Biomart_EnsemblG93_GRCh38_p12.txt", sep="\t")
+cat('Working with annotation file: Biomart_EnsemblG93_GRCh38_p12_NoSymbol.txt \n')
+annot<-read.delim(file="/pipeline/Biomart_EnsemblG93_GRCh38_p12_NoSymbol.txt", sep="\t")
 
 names(annot)<-c("EnsemblID", "Chr", "Start", "End", "GC", "Type")
 annot$Length<-abs(annot$End - annot$Start)
@@ -161,15 +161,15 @@ annot<-annot[annot$Chr%in%c(as.character(1:22), "X", "Y"),]
 annot$Chr<-droplevels(annot$Chr)
 cat('Non conventional chromosomes removed \n')
 
-uniq.annot <length(unique(annot$EnsemblID)) == nrow(uniq.annot)
+uniq.annot <- length(unique(annot$EnsemblID)) == nrow(annot)
 if(uniq.annot) {
   cat('Unique EnsemblIDs in annotation file\n')
 } else {
-  cat('Repeated EnsemblIDs in annotation file. P')
+  cat('Repeated EnsemblIDs in annotation file. \n')
   stop()
 }
 
-cat(paste('Annotation file. Final dimension: ', dim(annot), '\n'))
+cat(paste('Annotation file. Final dimension: ', paste(dim(annot), collapse=", "), '\n'))
 ## Save clean data
 save(annot, file=paste(RDATA, "annot.RData", sep="/"), compress="xz")
 cat('annot.RData saved \n')
@@ -196,7 +196,7 @@ load(file=paste(RDATA, "NormalRaw.RData", sep="/"))
 
 ##M=normal|tumor
 M<-cbind(normal$Counts, tumor$Counts)
-cat(paste('Total number of features and samples: ', dim(M), '\n'))
+cat(paste('Total number of features and samples: ', paste(dim(M), collapse=" ,"), '\n'))
 # [1] 60488     6
 
 ##targets=normal+tumor
@@ -236,11 +236,12 @@ head(Annot)
 cat('Adding biomart data\n')
 Annot<-merge(x=Annot, y=annot, by.x="EnsemblID", by.y="EnsemblID",
   all=FALSE, all.x=TRUE, all.y=FALSE, sort=FALSE)
-cat(paste('Merged file. Final dimension:', dim(Annot), '.\n'))
+cat(paste('Merged file. Final dimensions: ', paste(dim(Annot), collapse=", "), '.\n'))
 # [1] 60488    10
 dim(M)
 # [1] 60488     6
-cat(paste('There are ', row(Annot)-nrow(M), ' extra rows in the counts matrix.\n'))
+extra.rows <- nrow(Annot)-nrow(M) 
+cat(paste('There are ', extra.rows, ' extra rows in the counts matrix.\n'))
 # [1] 0
 
 ##Are there duplicated IDs?
@@ -327,7 +328,7 @@ stopifnot(all(1:nrow(M) %in% Annot$Row))
 
 ##Save the clean Data
 full<-list(M=M, Annot=Annot, Targets=targets)
-save(full, file=paste(RDATA, "RawFull.RData", sep="/"), compress="xz")
+#save(full, file=paste(RDATA, "RawFull.RData", sep="/"), compress="xz")
 cat("Saving RawFull.RData \n")
 }##############################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
