@@ -78,6 +78,7 @@ ids<-!is.na(full$Annot$GC) & !is.na(full$Annot$Length)
 
 full$M<-full$M[ids,]
 full$Annot<-full$Annot[ids,]
+cat("Non GC and lenght annotated genes removed\n")
 
 }##########################################
 ## EXPLORATORY ANALYSIS (NOISeq package)
@@ -106,6 +107,7 @@ mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
 png(filename=paste(PLOTSDIR, "biodetection.Rd_%03d.png", sep="/"),  width=w, height=h, pointsize=p)
 explo.plot(mybiodetection)
 dev.off()
+cat("Biodetection plots generated\n")
 #What do we need to see here?
 
 ## Count distribution per biotype
@@ -113,6 +115,7 @@ mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
 png(filename=paste(PLOTSDIR, "countsbio.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
 dev.off()
+cat("Counts distribution plot per biotype generated\n")
 #What about expression level?
 
 ## Count distribution per sample
@@ -121,11 +124,13 @@ png(paste(PLOTSDIR, "protein_coding_boxplot.png", sep="/"), width=w*2, height=h,
 explo.plot(mycountsbio, toplot = "protein_coding",
     samples = NULL, plottype = "boxplot")
 dev.off()
+cat("Counts distribution plot per sample generated\n")
 
 png(paste(PLOTSDIR, "protein_coding_barplot.png", sep="/"), width=w*2, height=h, pointsize=p)
 explo.plot(mycountsbio, toplot = "protein_coding",
     samples = NULL, plottype = "barplot")
 dev.off()
+cat("Counts distribution barplot for protein coding biotype generated\n")
 
 mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
 ## Count distribution per Experimental factors
@@ -133,19 +138,21 @@ png(paste(PLOTSDIR, "protein_coding_boxplot_group.png", sep="/"), width=w, heigh
 explo.plot(mycountsbio, toplot = "protein_coding",
     samples = NULL, plottype = "boxplot")
 dev.off()
+cat("Counts distribution boxplot for protein coding biotype and group generated\n")
 
 png(paste(PLOTSDIR, "protein_coding_barplot_group.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycountsbio, toplot = "protein_coding",
     samples = NULL, plottype = "barplot")
 dev.off()
+cat("Counts distribution barplot for protein coding biotype and group generated\n")
 #How much sensitivity we loose? 
 
 ## Saturation plot
-mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
-png(paste(PLOTSDIR, "saturation.png", sep="/"), width=w, height=h, pointsize=p)
-explo.plot(mysaturation, toplot="protein_coding",
-           samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
-dev.off()
+#mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
+#png(paste(PLOTSDIR, "saturation.png", sep="/"), width=w, height=h, pointsize=p)
+#explo.plot(mysaturation, toplot="protein_coding",
+#           samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
+#dev.off()
 #What about the depth of our samples?
 
 }##########################################
@@ -156,6 +163,7 @@ mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
 png(paste(PLOTSDIR, "lengthbias.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mylengthbias, samples=1:2)
 dev.off()
+cat("Lenght bias plot generated\n")
 #Do we see a clear pattern?
 
 ##GC bias
@@ -163,12 +171,14 @@ mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
 png(paste(PLOTSDIR, "GCbias.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mygcbiasRaw)
 dev.off()
+cat("GC bias plot generated\n")
 #Do we see a clear pattern?
 
 ## RNA composition
 mycomp <- dat(mydata, norm=FALSE, type="cd")
 png(paste(PLOTSDIR, "RNAComposition.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycomp, samples=1:12)
+cat("RNA composition plot generated\n")
 dev.off()
 #Are the samples comparable?
 ##########################
