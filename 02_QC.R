@@ -3,7 +3,7 @@
 ## Practical session: In silico analysis of RNA-Seq data.
 ###############################################################################
 ## Data preparation: 
-##      -Quality Control & bias removal
+##      -Quality Control
 ## Author: 
 ##          Dr. Cristobal Fresno - cristobalfresno@gmail.com
 ## Date: 2016-12-12
@@ -27,25 +27,6 @@
 ##          GC content bias: Detected
 ##         Gene Length bias: Detected
 ##         RNA content bias: Detected
-##     -CQN Correction
-##          -Filter genes with mean < 10
-##          -Length, GC content and size correction
-##          -Normalized expression log2 scale
-##          -Check the correction with NOISEQ
-##                  -Length bias?
-##                  -GC bias?
-##                  -RNA composition?
-##                  -Count distribution?
-##                  -Cleaning up
-##      -Multidimesional PCA noise analysis
-##          -Distribution exploration
-##              -Expression boxplot
-##              -Removing low expression
-##              -Annotation propagation
-##          -PCA EXPLORATION
-##              -Variance explained by each component
-##              -Loading plot
-##              -Score plot
 ###############################################################################
 ##Usefull Libraries
 ###############################################################################
@@ -54,8 +35,6 @@ library("parallel")
 library("NOISeq")
 ##library("cqn")
 library("DESeq2")
-##library("ggplot2")
-##library("reshape2")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
@@ -257,52 +236,6 @@ dev.off()
 # save(normalized.cqn, file=paste(RDATA, "normalizedcqn.RData", sep="/"), compress="xz")    
     
 }##########################################################################
-{##Multidimesional PCA noise analysis
 ##########################################################################
-## Distribution exploration
-##########################################
-# normalized.cqnMelt<-melt(normalized.cqn$M)
-# names(normalized.cqnMelt) <- c("EntrezID", "Sample", "Expression")
-# 
-# ##Expression density
-# p<-ggplot(data=normalized.cqnMelt,  
-#     aes(x=Expression, group=Sample, colour=Sample))+geom_density()
-# ggsave(paste(PLOTSDIR, "expression_densisty.png", sep="/"))
-# 
-# ##Expression boxplot
-# p<-ggplot(data=normalized.cqnMelt,aes(y=Expression, x=Sample, group=Sample,    
-#     colour=Sample))+geom_boxplot()
-# ggsave(paste(PLOTSDIR, "expression_boxplot.png", sep="/"))
-# 
-# 
-# ##########################################
-# #### PCA EXPLORATION
-# ##########################################
-# pca.results<-prcomp(t(normalized.cqn$M))
-# summary(pca.results)$importance[,1:10]
-# 
-# proportion<-round(summary(pca.results)$importance[2,]*100,0)
-# ## Variance explained by each component
-# png(paste(PLOTSDIR, "PCA.png", sep="/"), width=w, height=h, pointsize=p)
-# screeplot(pca.results)
-# dev.off()
-# 
-# ## Scatter plot on 1-3 PCA components
-# Group <- normalized.cqn$Targets$Group
-# p12<-ggplot(data=as.data.frame(pca.results$x), 
-#         aes(x=PC1, y=PC2, colour=Group, shape=Group))+
-#     geom_point(size=5)+
-#     xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
-#     ylab(paste("PC 2 ", proportion[2], "%", sep = ""))
-# ggsave(paste(PLOTSDIR, "PCA_1-2.png", sep="/"))
-# 
-# p13<-ggplot(data=as.data.frame(pca.results$x), 
-#         aes(x=PC1, y=PC3, colour=Group, shape=Group))+
-#     geom_point(size=5)+
-#     xlab(paste("PC 1 ", proportion[1], "%", sep = ""))+
-#     ylab(paste("PC 3 ", proportion[3], "%", sep = ""))
-# ggsave(paste(PLOTSDIR, "PCA_1-3.png", sep="/"))
-#No need to filter samples, they can be accurately clustered
-}##########################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
 ###########################################################################
