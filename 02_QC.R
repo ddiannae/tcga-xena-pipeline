@@ -140,7 +140,7 @@ cat("Counts distribution barplot for protein coding biotype and group generated\
 {##Bias
 ##########################################
 ## Length bias detection
-mylengthbias <- dat(mydata, factor="Group", norm=FALSE, type="lengthbias")
+mylengthbias <- dat(mydata, factor="Group", type="lengthbias")
 png(paste(PLOTSDIR, "lengthbias.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mylengthbias, samples=1:2)
 dev.off()
@@ -148,7 +148,7 @@ cat("Lenght bias plot generated\n")
 #Do we see a clear pattern?
 
 ##GC bias
-mygcbiasRaw <- NOISeq::dat(mydata, factor = "Group", norm=FALSE, type="GCbias")
+mygcbiasRaw <- dat(mydata, factor = "Group", type="GCbias")
 png(paste(PLOTSDIR, "GCbias.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mygcbiasRaw)
 dev.off()
@@ -156,7 +156,7 @@ cat("GC bias plot generated\n")
 #Do we see a clear pattern?
 
 ## RNA composition
-mycomp <- dat(mydata, norm=FALSE, type="cd")
+mycomp <- dat(mydata, type="cd")
 png(paste(PLOTSDIR, "RNAComposition.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycomp, samples=1:12)
 cat("RNA composition plot generated\n")
@@ -167,6 +167,60 @@ dev.off()
 ##########################
 #A complete pdf report can be obtained using this function.
 #QCreport(mydata, factor="Group", file=paste(PLOTSDIR, "QCReport.pdf", sep="/"))
+
+}#############################
+{## PCA Analysis with NOISeq
+##########################################
+pca.dat <- dat(mydata, type = "PCA", logtransf = F)
+pca.results <- pca.results@dat$result
+
+## Variance explained by each component
+pdf(file=paste(PLOTSDIR, "PCAVariance_raw.pdf", sep="/"), width = 4*2, height = 4*2)
+barplot(pca.results$var.exp[,1], xlab = "PC", ylab = "Explained variance")
+dev.off()
+cat("PCA variance raw plot generated.\n")
+
+## Loading plot
+pdf(file=paste(PLOTSDIR, "PCALoading_raw.pdf", sep="/"), width = 4*2, height = 4*2)
+plot(pca.results$loadings[,1:2], col = 1, pch = 20, cex = 0.5,
+     xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
+     ylab = paste("PC 2 ", round(pca.results$var.exp[2,1]*100,0), "%", sep = ""),
+     main = "PCA loadings",
+     xlim = range(pca.results$loadings[,1:2]) + 0.02*diff(range(pca.results$loadings[,1:2]))*c(-1,1),
+     ylim = range(pca.results$loadings[,1:2]) + 0.02*diff(range(pca.results$loadings[,1:2]))*c(-1,1))  
+dev.off()
+cat("PCA loading raw plot generated.\n")
+
+## Score plot
+mycol <- as.character(myfilterRaw$Targets$Group)
+mycol[mycol == 'N'] <- "black"
+mycol[mycol == 'T'] <- "red2"
+
+pdf(file=paste(PLOTSDIR, "PCAScore_raw.pdf", sep="/"), width = 5*2, height = 5)
+par(mfrow = c(1,2))
+
+# PC1 & PC2
+rango <- diff(range(pca.results$scores[,1:2]))
+plot(pca.results$scores[,1:2], col = "white",
+     xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
+     ylab = paste("PC 2 ", round(pca.results$var.exp[2,1]*100,0), "%", sep = ""),
+   main = "PCA scores",
+   xlim = range(pca.results$scores[,1:2]) + 0.02*rango*c(-1,1),
+   ylim = range(pca.results$scores[,1:2]) + 0.02*rango*c(-1,1))
+points(pca.results$scores[,1], pca.results$scores[,2], col = mycol, cex = 1.5)  
+legend("topright", c("N", "T"),fill = c("black", "red2"), ncol = 2, pch = 1)
+
+# PC1 & PC3
+rango2 = diff(range(pca.results$scores[,c(1,3)]))
+plot(pca.results$scores[,c(1,3)], col = "white",
+   xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
+   ylab = paste("PC 3 ", round(pca.results$var.exp[3,1]*100,0), "%", sep = ""),
+   main = "PCA scores",
+   xlim = range(pca.results$scores[,c(1,3)]) + 0.02*rango2*c(-1,1),
+   ylim = range(pca.results$scores[,c(1,3)]) + 0.02*rango2*c(-1,1))
+points(pca.results$scores[,1], pca.results$scores[,3], col = mycol, cex = 1.5)
+legend("topright", c("N", "T"),fill = c("black", "red2"), ncol = 2, pch = 1)
+dev.off()
 
 }#############################
 ##########################################################################
