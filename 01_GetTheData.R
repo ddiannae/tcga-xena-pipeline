@@ -169,7 +169,7 @@ if(uniq.annot) {
   stop()
 }
 
-cat(paste('Annotation file. Final dimension: ', paste(dim(annot), collapse=", "), '\n'))
+cat('Annotation file. Final dimension: ', paste(dim(annot), collapse=", "), '\n')
 ## Save clean data
 save(annot, file=paste(RDATA, "annot.RData", sep="/"), compress="xz")
 cat('annot.RData saved \n')
@@ -196,7 +196,7 @@ load(file=paste(RDATA, "NormalRaw.RData", sep="/"))
 
 ##M=normal|tumor
 M<-cbind(normal$Counts, tumor$Counts)
-cat(paste('Total number of features and samples: ', paste(dim(M), collapse=" ,"), '\n'))
+cat('Total number of features and samples: ', paste(dim(M), collapse=" ,"), '\n')
 # [1] 60488     6
 
 ##targets=normal+tumor
@@ -236,12 +236,12 @@ head(Annot)
 cat('Adding biomart data\n')
 Annot<-merge(x=Annot, y=annot, by.x="EnsemblID", by.y="EnsemblID",
   all=FALSE, all.x=TRUE, all.y=FALSE, sort=FALSE)
-cat(paste('Merged file. Final dimensions: ', paste(dim(Annot), collapse=", "), '.\n'))
+cat('Merged file. Final dimensions: ', paste(dim(Annot), collapse=", "), '.\n')
 # [1] 60488    10
 dim(M)
 # [1] 60488     6
 extra.rows <- nrow(Annot)-nrow(M) 
-cat(paste('There are ', extra.rows, ' extra rows in the counts matrix.\n'))
+cat('There are ', extra.rows, ' extra rows in the counts matrix.\n')
 # [1] 0
 
 ##Are there duplicated IDs?
@@ -328,7 +328,7 @@ stopifnot(all(1:nrow(M) %in% Annot$Row))
 
 ##Save the clean Data
 full<-list(M=M, Annot=Annot, Targets=targets)
-#save(full, file=paste(RDATA, "RawFull.RData", sep="/"), compress="xz")
+save(full, file=paste(RDATA, "RawFull.RData", sep="/"), compress="xz")
 cat("Saving RawFull.RData \n")
 }##############################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
