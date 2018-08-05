@@ -33,8 +33,6 @@
 library("BiocParallel")
 library("parallel")
 library("NOISeq")
-##library("cqn")
-library("DESeq2")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
@@ -171,71 +169,6 @@ dev.off()
 #QCreport(mydata, factor="Group", file=paste(PLOTSDIR, "QCReport.pdf", sep="/"))
 
 }#############################
-{## CQN Correction
-# #############################
-# ##Filter genes with mean < 10, i ., low expressionm genes
-# expressedGenes<- apply(full$M, 1, function(x) mean(x)>10)
-# 
-# ##Filtering low expression genes
-# mean10<-list(M=full$M[expressedGenes, ], Annot=full$Annot[expressedGenes, ],
-#     Targets=full$Targets)
-# 
-# ##Length, GC content and size correction
-# y_DESeq<-DESeqDataSetFromMatrix(countData=mean10$M, 
-#     colData=mean10$Targets, design= ~Group)
-# y_DESeq<-estimateSizeFactors(y_DESeq)
-# 
-# cqn.mean10<- cqn(mean10$M, lengths=mean10$Annot$Length,
-#  x = mean10$Annot$GC, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
-# # RQ fit .....................................
-# # SQN Using 'sigma' instead 'sig2' (= sigma^2) is preferred now
-# 
-# ##Normalized expression log2 scale
-# normalized.cqn <- cqn.mean10$y + cqn.mean10$offset
-# 
-# ##Check the correction with NOISEQ
-# mydataCQN <- NOISeq::readData(
-#   data = normalized.cqn, 
-#   length = mean10$Annot[, c("EnsemblID", "Length")], 
-#   biotype = mean10$Annot[, c("EnsemblID", "Type")], 
-#   chromosome = mean10$Annot[, c("Chr", "Start", "End")], 
-#   factors = mean10$Targets[, "Group",drop=FALSE], 
-#   gc = mean10$Annot[, c("EnsemblID", "GC")])
-# 
-# ## Length bias?
-# mylengthbias <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE,
-#     type="lengthbias")
-# png(paste(PLOTSDIR, "lengthbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
-# explo.plot(mylengthbias, samples = 1:2)
-# dev.off()
-# #Was it corrected?
-# 
-# ##GC bias?
-# mygcbiasRaw <- NOISeq::dat(mydataCQN, factor = "Group", norm=TRUE, type="GCbias")
-# png(paste(PLOTSDIR, "GCbias_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
-# explo.plot(mygcbiasRaw)
-# dev.off()
-# #Was it corrected?
-# 
-# ## RNA composition?
-# mycomp <- dat(mydataCQN, norm=TRUE, type = "cd")
-# png(paste(PLOTSDIR, "RNAComposition_corrected.png", sep="/"),  width=w, height=h, pointsize=p)
-# explo.plot(mycomp, samples=1:12)
-# dev.off()
-# table(mycomp@dat$DiagnosticTest[,  "Diagnostic Test"])
-# # FAILED PASSED 
-# #     22     14 
-# #Was it corrected? Which one is better?
-# 
-# ##Cleanning up
-# #mean10 has the raw counts above mean > 10
-# normalized.cqn<-list(M=normalized.cqn, Annot=mean10$Annot, 
-#     Targets=mean10$Targets, cqn=cqn.mean10)
-# 
-# save(mean10, file=paste(RDATA, "mean10.RData", sep="/"), compress="xz")        
-# save(normalized.cqn, file=paste(RDATA, "normalizedcqn.RData", sep="/"), compress="xz")    
-    
-}##########################################################################
 ##########################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
 ###########################################################################
