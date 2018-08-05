@@ -1,8 +1,6 @@
 #!/bin/bash
 # This is a comment!
 echo Hello World
-whoami
-ls -lha /
 echo $PRIMARY_SITE
 
 DATADIR="data/"
