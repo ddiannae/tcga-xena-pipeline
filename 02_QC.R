@@ -39,6 +39,9 @@ options(width=80)
 ###############################################################################
 ##Quality Control
 ###############################################################################
+cat("#################\n")
+cat("Step 2: QC\n")
+cat("#################\n")
 DATADIR <- '/pipeline/data/'
 args <- commandArgs(trailingOnly = TRUE)
 DATADIR <- args[1]
@@ -159,8 +162,8 @@ cat("GC bias plot generated\n")
 mycomp <- dat(mydata, type="cd")
 png(paste(PLOTSDIR, "RNAComposition.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycomp, samples=1:12)
-cat("RNA composition plot generated\n")
 dev.off()
+cat("RNA composition plot generated\n")
 #Are the samples comparable?
 ##########################
 ## Quality Control Report
@@ -172,7 +175,7 @@ dev.off()
 {## PCA Analysis with NOISeq
 ##########################################
 pca.dat <- dat(mydata, type = "PCA", logtransf = F)
-pca.results <- pca.results@dat$result
+pca.results <- pca.dat@dat$result
 
 ## Variance explained by each component
 pdf(file=paste(PLOTSDIR, "PCAVariance_raw.pdf", sep="/"), width = 4*2, height = 4*2)
@@ -192,7 +195,7 @@ dev.off()
 cat("PCA loading raw plot generated.\n")
 
 ## Score plot
-mycol <- as.character(myfilterRaw$Targets$Group)
+mycol <- as.character(full$Targets$Group)
 mycol[mycol == 'N'] <- "black"
 mycol[mycol == 'T'] <- "red2"
 
@@ -221,8 +224,12 @@ plot(pca.results$scores[,c(1,3)], col = "white",
 points(pca.results$scores[,1], pca.results$scores[,3], col = mycol, cex = 1.5)
 legend("topright", c("N", "T"),fill = c("black", "red2"), ncol = 2, pch = 1)
 dev.off()
+cat("PCA scores raw plot generated.\n")
 
 }#############################
 ##########################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
 ###########################################################################
+cat("#################\n")
+cat("End of Step 2: QC\n")
+cat("#################\n")
