@@ -52,10 +52,10 @@
 library("BiocParallel")
 library("parallel")
 library("NOISeq")
-library("cqn")
+##library("cqn")
 library("DESeq2")
-library("ggplot2")
-library("reshape2")
+##library("ggplot2")
+##library("reshape2")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
@@ -78,8 +78,10 @@ ids<-!is.na(full$Annot$GC) & !is.na(full$Annot$Length)
 
 full$M<-full$M[ids,]
 full$Annot<-full$Annot[ids,]
-cat("Non GC and lenght annotated genes removed\n")
+cat("Non GC and lenght annotated genes removed.\n")
 
+save(full, file=paste(RDATA, "RawFull.RData", sep="/"), compress="xz")
+cat("Saving RawFull.RData \n")
 }##########################################
 ## EXPLORATORY ANALYSIS (NOISeq package)
 ##########################################
@@ -102,7 +104,7 @@ mydata <- NOISeq::readData(
 }##########################################
 {## Plots
 ##########################################
-# Biodetection plot
+# Biodetection plot. Per group.
 mybiodetection <- dat(mydata, type="biodetection", factor="Group", k=0)
 png(filename=paste(PLOTSDIR, "biodetection.Rd_%03d.png", sep="/"),  width=w, height=h, pointsize=p)
 explo.plot(mybiodetection)
@@ -110,12 +112,12 @@ dev.off()
 cat("Biodetection plots generated\n")
 #What do we need to see here?
 
-## Count distribution per biotype
+## Count distribution per biotype. Using count per million, only for one sample
 mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
 png(filename=paste(PLOTSDIR, "countsbio.png", sep="/"), width=w, height=h, pointsize=p)
 explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
 dev.off()
-cat("Counts distribution plot per biotype generated\n")
+cat("Counts distribution plot per biotype and one sample generated\n")
 #What about expression level?
 
 ## Count distribution per sample
@@ -124,13 +126,13 @@ png(paste(PLOTSDIR, "protein_coding_boxplot.png", sep="/"), width=w*2, height=h,
 explo.plot(mycountsbio, toplot = "protein_coding",
     samples = NULL, plottype = "boxplot")
 dev.off()
-cat("Counts distribution plot per sample generated\n")
+cat("Counts distribution plot for protein coding and all samples generated\n")
 
 png(paste(PLOTSDIR, "protein_coding_barplot.png", sep="/"), width=w*2, height=h, pointsize=p)
 explo.plot(mycountsbio, toplot = "protein_coding",
     samples = NULL, plottype = "barplot")
 dev.off()
-cat("Counts distribution barplot for protein coding biotype generated\n")
+cat("Counts distribution barplot for protein coding biotype and all samples generated\n")
 
 mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
 ## Count distribution per Experimental factors
@@ -147,7 +149,9 @@ dev.off()
 cat("Counts distribution barplot for protein coding biotype and group generated\n")
 #How much sensitivity we loose? 
 
-## Saturation plot
+## Saturation plot. 
+## We're not getting the saturation plot because it takes too long and doesn't give
+## us that useful information.
 #mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
 #png(paste(PLOTSDIR, "saturation.png", sep="/"), width=w, height=h, pointsize=p)
 #explo.plot(mysaturation, toplot="protein_coding",
@@ -187,12 +191,6 @@ dev.off()
 #A complete pdf report can be obtained using this function.
 #QCreport(mydata, factor="Group", file=paste(PLOTSDIR, "QCReport.pdf", sep="/"))
 
-###########################################################################
-##Basal situation
-##   GC content bias: Detected
-##  Gene Length bias: Detected
-##  RNA content bias: Detected
-###########################################################################
 }#############################
 {## CQN Correction
 # #############################
