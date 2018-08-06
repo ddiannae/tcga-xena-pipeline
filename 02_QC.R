@@ -27,6 +27,7 @@
 ##          GC content bias: Detected
 ##         Gene Length bias: Detected
 ##         RNA content bias: Detected
+##      -PCA
 ###############################################################################
 ##Usefull Libraries
 ###############################################################################
@@ -60,19 +61,17 @@ full$M<-full$M[ids,]
 full$Annot<-full$Annot[ids,]
 cat("Non GC and lenght annotated genes removed.\n")
 
+row.names(full$M)<-full$Annot$EnsemblID
+row.names(full$Annot)<-full$AnnotdEnsemblID
+row.names(full$Targets)<-full$Targets$ID
+full$Targets$Group<-factor(substr(full$Targets$ID, start=1, stop=1))
+
 save(full, file=paste(RDATA, "RawFull.RData", sep="/"), compress="xz")
 cat("Saving RawFull.RData \n")
 }##########################################
 ## EXPLORATORY ANALYSIS (NOISeq package)
 ##########################################
 {## Reading data into NOISeq package -> mydata
-row.names(full$M)<-full$Annot$EnsemblID
-row.names(full$Annot)<-full$AnnotdEnsemblID
-row.names(full$Targets)<-full$Targets$ID
-full$Targets$Group<-factor(substr(full$Targets$ID, start=1, stop=1))
-nsamples = table(full$Targets$Group)[1]
-tsamples = table(full$Targets$Group)[2]
-
 mydata <- NOISeq::readData(
   data = full$M, 
   length = full$Annot[, c("EnsemblID", "Length")], 
