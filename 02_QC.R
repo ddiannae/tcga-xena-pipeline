@@ -143,16 +143,16 @@ cat("Counts distribution barplot for protein coding biotype and group generated\
 ##########################################
 ## Length bias detection
 mylengthbias <- dat(mydata, factor="Group", type="lengthbias")
-png(paste(PLOTSDIR, "lengthbias.png", sep="/"), width=w, height=h, pointsize=p)
-explo.plot(mylengthbias, samples=1:2)
+png(paste(PLOTSDIR, "Lengthbias.png", sep="/"), width=w, height=h, pointsize=p)
+explo.plot(mylengthbias, samples = NULL, toplot = "global")
 dev.off()
 cat("Lenght bias plot generated\n")
 #Do we see a clear pattern?
 
 ##GC bias
-mygcbiasRaw <- dat(mydata, factor = "Group", type="GCbias")
+mygcbias <- dat(mydata, factor = "Group", type="GCbias")
 png(paste(PLOTSDIR, "GCbias.png", sep="/"), width=w, height=h, pointsize=p)
-explo.plot(mygcbiasRaw)
+explo.plot(mygcbias, samples = NULL, toplot = "global")
 dev.off()
 cat("GC bias plot generated\n")
 #Do we see a clear pattern?
