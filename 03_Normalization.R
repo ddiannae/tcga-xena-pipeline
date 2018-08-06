@@ -24,8 +24,11 @@ cat("#################\n")
 cat("Step 3: Normalization\n")
 cat("#################\n")
 DATADIR <- '/pipeline/data/'
-RDATA <- paste(DATADIR, "rdata", sep="")
-PLOTSDIR <-paste(DATADIR, "plots", sep="")
+RDATA <- paste(DATADIR, "rdata", sep = "")
+PLOTSDIR <-paste(DATADIR, "plots", sep = "")
+PLOTSNORMDIR <- paste(PLOTSDIR, "normalization", sep = "/")
+dir.create(PLOTSNORMDIR)
+
 w <- 1024
 h <- 1024
 p <- 24
@@ -59,7 +62,7 @@ between.nom <- c("tmm", "full")
 normalization.results <- data.frame()
 
 ## This function will retrieve the NOISeq results to test the normalization combination
-getNOISeqResults <- function(norm.data, m10.data) {
+getNOISeqResults <- function(step1, step2, step3, norm.data, m10.data) {
   ### Check the NOISEq results 
   mydata <- NOISeq::readData(
     data = norm.data, 
@@ -68,7 +71,7 @@ getNOISeqResults <- function(norm.data, m10.data) {
     chromosome = m10.data$Annot[, c("Chr", "Start", "End")], 
     factors = m10.data$Targets[, "Group",drop=FALSE], 
     gc = m10.data$Annot[, c("EnsemblID", "GC")])
-  
+  nsamples <- dim(m10.data$Targets)[1]
   ### Length bias 
   mylengthbias <- dat(mydata, factor="Group", norm=T, type="lengthbias")
   regmodels <- mylengthbias@dat$RegressionModels
@@ -80,6 +83,10 @@ getNOISeqResults <- function(norm.data, m10.data) {
   rsquared.2 <- summary(regmodels[[2]])$r.squared
   fstatistic.2 <- summary(regmodels[[2]])$fstatistic
   pvalue.2 <- signif(pf(q = fstatistic.2[1], df1 = fstatistic.2[2], df2 = fstatistic.2[3], lower.tail = FALSE), 2)
+  
+  png(paste(PLOTSNORMDIR, paste("Lengthbias_", step1, "_", step2, "_", step3, ".png", sep = ""), sep="/"), width=w, height=h, pointsize=p)
+  explo.plot(mylengthbias, samples = NULL, toplot = "global")
+  dev.off()
   
   ## GC Bias
   mygcbias <- dat(mydata, factor = "Group", norm = T, type ="GCbias")
@@ -93,18 +100,31 @@ getNOISeqResults <- function(norm.data, m10.data) {
   fstatistic.2.gc <- summary(regmodels.gc[[2]])$fstatistic
   pvalue.2.gc <- signif(pf(q = fstatistic.2.gc[1], df1 = fstatistic.2.gc[2], df2 = fstatistic.2.gc[3], lower.tail = FALSE), 2)
   
-  #RNA Composition
-  myrnacomp <- dat(mydata, norm=T, type="cd")
-  dtable <- table(myrnacomp@dat$DiagnosticTest[,  "Diagnostic Test"])
+  png(paste(PLOTSNORMDIR, paste("GCbias_", step1, "_", step2, "_", step3, ".png", sep = ""), sep="/"), width=w, height=h, pointsize=p)
+  explo.plot(mygcbias, samples = NULL, toplot = "global")
+  dev.off()
   
-  norm.set.results <- data.frame(paste("Length", ln, sep = "."), paste("GC", gcn, sep = "."),
-                                 paste("Between", bn, sep =  "."), rsquared.1, pvalue.1, rsquared.2, pvalue.2,
-                                 rsquared.1.gc, pvalue.1.gc, rsquared.2.gc, pvalue.2.gc, dtable["PASSED"])
-  colnames(norm.set.results) <- c("Step1", "Step2", "Step3",  paste("Lenght", name1, "R2", sep = "."), 
-                                  paste("Lenght", name1, "p-value", sep = "."),  paste("Lenght", name2, "R2", sep = "."), 
-                                  paste("Lenght", name2, "p-value", sep = "."), paste("GC", name1.gc, "R2", sep = "."), 
-                                  paste("GC", name1.gc, "p-value", sep = "."),  paste("GC", name2.gc, "R2", sep = "."), 
-                                  paste("GC", name2.gc, "p-value", sep = "."), "RNA.PassedSamples")
+  dtable <- data.frame(PASSED = NA)
+  #RNA Composition
+  rnacomp <-  tryCatch({
+    myrnacomp <- dat(mydata, norm=F, type="cd")
+    dtable <- table(myrnacomp@dat$DiagnosticTest[,  "Diagnostic Test"])
+    png(paste(PLOTSNORMDIR,  paste("RNAComposition_", step1, "_", step2, "_", step3, ".png", sep = "") , sep="/"), width=w, height=h, pointsize=p)
+    explo.plot(myrnacomp, samples = 1:12)
+    dev.off()
+  }, error = function(cond) {
+    cat("Error running rnacomposition test.\n")
+    return(NA)
+  })
+  
+  norm.set.results <- data.frame(step1, step2, step3, 
+                                 rsquared.1, pvalue.1, rsquared.2, pvalue.2,
+                                 rsquared.1.gc, pvalue.1.gc, rsquared.2.gc, pvalue.2.gc, dtable["PASSED"]/nsamples)
+  colnames(norm.set.results) <- c("Step1", "Step2", "Step3", 
+                                  paste("Lenght", name1, "R2", sep = "."), paste("Lenght", name1, "p-value", sep = "."),  
+                                  paste("Lenght", name2, "R2", sep = "."), paste("Lenght", name2, "p-value", sep = "."), 
+                                  paste("GC", name1.gc, "R2", sep = "."), paste("GC", name1.gc, "p-value", sep = "."), 
+                                  paste("GC", name2.gc, "R2", sep = "."), paste("GC", name2.gc, "p-value", sep = "."), "RNA.PassedSamples")
   return(norm.set.results)
 } 
 
@@ -115,7 +135,6 @@ for (ln in lenght.norm) {
   } else {
     ln.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$Length, which = ln)
   }
-  
   for (gcn in gc.norm) {
     gcn.data <- withinLaneNormalization(ln.data, mean10$Annot$GC, which = gcn)
     
@@ -126,7 +145,35 @@ for (ln in lenght.norm) {
       } else {
         normalized.data <- betweenLaneNormalization(gcn.data, which = bn, offset = TRUE)
       }
-      norm.noiseq.results <- getNOISeqResults(normalized.data, mean10)
+  
+      norm.noiseq.results <- getNOISeqResults(paste("Length", ln, sep = "."), paste("GC", gcn, sep = "."), paste("Between", bn, sep =  "."),
+                                              normalized.data, mean10)
+      normalization.results <- rbind(normalization.results, norm.noiseq.results)                      
+    }
+  }
+}
+
+## Now we try with GC normalization first
+for (gcn in gc.norm) {
+  gcn.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$GC, which = gcn)
+  
+  for (ln in lenght.norm) {
+    if (ln == "RPKM") {
+      ln.data <- rpkm(gcn.data, long=mean10$Annot$Length)
+    } else {
+      ln.data <- withinLaneNormalization(gcn.data, mean10$Annot$Length, which = ln)
+    }
+    
+    for (bn in between.nom) {
+      cat("Testing with GC normalization: ", gcn, ",  length normalization: ", ln, " and between lane normalization: ", bn, "\n")
+      if (bn == "tmm") {
+        normalized.data <- tmm(ln.data, long = 1000, lc = 0, k = 0)
+      } else {
+        normalized.data <- betweenLaneNormalization(ln.data, which = bn, offset = TRUE)
+      }
+      
+      norm.noiseq.results <- getNOISeqResults(paste("GC", ln, sep = "."), paste("Length", gcn, sep = "."), paste("Between", bn, sep =  "."), 
+                                              normalized.data, mean10)
       normalization.results <- rbind(normalization.results, norm.noiseq.results)                      
     }
   }
