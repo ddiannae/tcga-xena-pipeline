@@ -1,4 +1,4 @@
-cran <- c('ggplot2', 'reshape2')
+cran <- c('png', 'grid', 'gridExtra', 'ggplot2', 'reshape2')
 bioconductor <- c('NOISeq', 'EDASeq', 'BiocParallel')
 chooseCRANmirror(graphics=FALSE, ind=1)
 source('http://bioconductor.org/biocLite.R')
