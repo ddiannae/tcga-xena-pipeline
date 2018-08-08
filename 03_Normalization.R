@@ -103,19 +103,13 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
     explo.plot(mygcbias, samples = NULL, toplot = "global")
     dev.off()
     
-    dtable <- data.frame(PASSED = NA)
     #RNA Composition
-    rnacomp <-  tryCatch({
-      myrnacomp <- dat(mydata, norm = TRUE, type="cd")
-      dtable <- table(myrnacomp@dat$DiagnosticTest[,  "Diagnostic Test"])
-      if (is.na(dtable["PASSED"])) dtable <- data.frame(PASSED = 0)
-      png(paste(PLOTSNORMDIR,  paste(step1, step2, step3, "RNAComposition.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
-      explo.plot(myrnacomp, samples = 1:12)
-      dev.off()
-    }, error = function(cond) {
-      cat("Error running rnacomposition test.\n")
-      return(NA)
-    })
+    myrnacomp <- dat(mydata, norm = TRUE, type="cd")
+    dtable <- table(myrnacomp@dat$DiagnosticTest[,  "Diagnostic Test"])
+    if (is.na(dtable["PASSED"])) dtable <- data.frame(PASSED = 0)
+    png(paste(PLOTSNORMDIR,  paste(step1, step2, step3, "RNAComposition.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
+    explo.plot(myrnacomp, samples = 1:12)
+    dev.off()
     
     norm.set.results <- data.frame(step1, step2, step3, 
                                    l.stats.1$r2, l.stats.1$p, l.stats.2$r2, l.stats.2$p,
