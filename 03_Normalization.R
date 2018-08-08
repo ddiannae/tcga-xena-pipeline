@@ -15,6 +15,9 @@ library("BiocParallel")
 library("parallel")
 library("NOISeq")
 library("EDASeq")
+library ("png") 
+library("grid")
+library("gridExtra")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
@@ -33,7 +36,7 @@ h <- 1024
 p <- 24
 
 ##########################################################################
-if(FALSE) {### NORMALIZATION METHODS TESTING
+if(TRUE) {### NORMALIZATION METHODS TESTING
   ###########################################################################
   load(file=paste(RDATA, "RawFull.RData", sep="/"))
   { ### We keep only genes with mean expression count > 10 
@@ -89,26 +92,43 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
     mylengthbias <- dat(mydata, factor="Group", norm = TRUE, type="lengthbias")
     l.stats.1 <- getRegressionStatistics(mylengthbias@dat$RegressionModels[1])
     l.stats.2 <- getRegressionStatistics(mylengthbias@dat$RegressionModels[2])
-    
-    png(paste(PLOTSNORMDIR, paste(step1, step2, step3, "Lenghtbias.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
-    explo.plot(mylengthbias, samples = NULL, toplot = "global")
-    dev.off()
-    
+
     ## GC Bias
     mygcbias <- dat(mydata, factor = "Group", norm = TRUE, type ="GCbias")
     gc.stats.1 <- getRegressionStatistics(mygcbias@dat$RegressionModels[1])
     gc.stats.2 <- getRegressionStatistics(mygcbias@dat$RegressionModels[2])
-    
-    png(paste(PLOTSNORMDIR, paste(step1, step2, step3, "GCbias.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
-    explo.plot(mygcbias, samples = NULL, toplot = "global")
-    dev.off()
-    
+   
     #RNA Composition
     myrnacomp <- dat(mydata, norm = TRUE, type="cd")
     dtable <- table(myrnacomp@dat$DiagnosticTest[,  "Diagnostic Test"])
     if (is.na(dtable["PASSED"])) dtable <- data.frame(PASSED = 0)
-    png(paste(PLOTSNORMDIR,  paste(step1, step2, step3, "RNAComposition.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
+    
+    pngPlots <- c(paste(PLOTSNORMDIR, "Lenghtbias.png", sep="/"), 
+                  paste(PLOTSNORMDIR, "GCbias.png", sep="/"), 
+                  paste(PLOTSNORMDIR, "RNAComposition.png", sep="/"))
+    
+    png(pngPlots[1], width=w/2, height=h/2)
+    explo.plot(mylengthbias, samples = NULL, toplot = "global")
+    dev.off()
+    
+    png(pngPlots[2], width=w/2, height=h/2)
+    explo.plot(mygcbias, samples = NULL, toplot = "global")
+    dev.off()
+    
+    png(pngPlots[3],width=w/2, height=h/2)
     explo.plot(myrnacomp, samples = 1:12)
+    dev.off()
+    
+    thePlots <- lapply (pngPlots, function(pngFile) {
+      rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
+    })
+    
+    plotname <- paste(step1, step2, step3, step3, sep = "_")
+    png(paste(PLOTSNORMDIR, paste(plotname, "png", sep ="."), sep="/"),  height=h/2, width=w*(3/2))
+    par(oma = c(0, 0, 2, 0))
+    plot.new()
+    do.call(grid.arrange, c(thePlots,  ncol = 3))
+    mtext(plotname, outer = TRUE, cex = 1.5)
     dev.off()
     
     norm.set.results <- data.frame(step1, step2, step3, 
@@ -190,32 +210,37 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
   
   ### Length bias 
   mylengthbias <- dat(mydata, factor="Group", norm = TRUE, type="lengthbias")
-  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "Lenghtbias.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "Lenghtbias.png", sep = "_"), sep="/"),
+      width=w, height=h, pointsize=p)
   explo.plot(mylengthbias, samples = NULL, toplot = "global")
   dev.off()
   cat("Lenght bias plot generated\n")
   
   ## GC Bias
   mygcbias <- dat(mydata, factor = "Group", norm = TRUE, type ="GCbias")
-  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "GCbias.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "GCbias.png", sep = "_"), sep="/"), 
+      width=w, height=h, pointsize=p)
   explo.plot(mygcbias, samples = NULL, toplot = "global")
   dev.off()
   cat("GC bias plot generated\n")
   
   #RNA Composition
   myrnacomp <- dat(mydata, norm = TRUE, type="cd")
-  png(paste(PLOTSDIR,  paste(step1, step2, step3, "corrected", "RNAComposition.png", sep = "_"), sep="/"), width=w, height=h, pointsize=p)
+  png(paste(PLOTSDIR,  paste(step1, step2, step3, "corrected", "RNAComposition.png", sep = "_"), sep="/"), 
+      width=w, height=h, pointsize=p)
   explo.plot(myrnacomp, samples = 1:12)
   dev.off()
   cat("RNA composition plot generated\n")
   
   mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
-  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "protein_coding_boxplot.png", sep = "_"), sep="/"), width=w*2, height=h, pointsize=p)
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "protein_coding_boxplot.png", sep = "_"), sep="/"), 
+      width=w*2, height=h, pointsize=p)
   explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "boxplot")
   dev.off()
   cat("Counts distribution plot for protein coding and all samples generated\n")
   
-  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "protein_coding_barplot.png", sep = "_"), sep="/"), width=w*2, height=h, pointsize=p)
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "protein_coding_barplot.png", sep = "_"), sep="/"), 
+      width=w*2, height=h, pointsize=p)
   explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "barplot")
   dev.off()
   cat("Counts distribution barplot for protein coding biotype and all samples generated\n")
@@ -235,7 +260,8 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
   cat("Counts per million < 10 filter\n")
   ##Density plot
   pl<-ggplot(data=melt(log(norm.data$M+1)), aes(x=value, group=Var2, colour=Var2))+geom_density(show.legend = F)
-  pdf(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_densitylog.pdf", sep = "_"), sep="/"))
+  png(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_densitylog.png", sep = "_"), sep="/"), 
+      width = w, height = h, pointsize = p)
   pl
   dev.off()
   cat("Density plot for all samples generated\n")
@@ -254,13 +280,46 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
   stopifnot(nrow(norm.data.cpm10$M) == nrow(norm.data.cpm10$Annot))
   stopifnot(row.names(norm.data.cpm10$M) == row.names(norm.data.cpm10$Annot))
   pl<-ggplot(data=melt(log(norm.data.cpm10$M+1)), aes(x=value, group=Var2, colour=Var2))+geom_density(show.legend = F)
-  pdf(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_cpm10_densitylog.pdf", sep = "_"), sep="/"))
+  png(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_cpm10_densitylog.png", sep = "_"), sep="/"),
+      width = w, height = h, pointsize = p)
   pl
   dev.off()
   cat("Density plot for all samples after cpm10 filter generated\n")
   
   cat("Saving", paste(step1, step2, step3, "Norm_cpm10.RData", sep = "_"), "\n")
   save(norm.data.cpm10, file=paste(RDATA, paste(step1, step2, step3, "Norm_cpm10.RData", sep = "_"), sep="/"), compress="xz")
+  
+  cat("Generating data matrices for Aracne\n")
+  ## Data matrices for Aracne
+  ## ALL = healthy | cancer
+  M <- as.data.frame(norm.data.cpm10$M)
+  M <- cbind(gene=as.character(norm.data.cpm10$Annot$EnsemblID), M)
+  
+  #normal samples
+  normal <- as.data.frame(norm.data.cpm10$M[,norm.data.cpm10$Targets$Group == "N"])
+  normal <- cbind(gene=as.character(norm.data.cpm10$Annot$EnsemblID), normal)
+  
+  #tumor samples
+  tumor <- as.data.frame(norm.data.cpm10$M[,norm.data.cpm10$Targets$Group == "T"])
+  tumor <- cbind(gene=as.character(norm.data.cpm10$Annot$EnsemblID), tumor)
+  
+  #EnsemblIDs
+  symbols <-as.character(norm.data.cpm10$Annot$EnsemblID)
+  
+  cat("Saving data\n")
+  
+  cat("Saving", paste(step1, step2, step3, "Norm_cpm10_all.tsv", sep = "_"), "\n")
+  write.table(M, file=paste(RDATA, paste(step1, step2, step3, "Norm_cpm10_all.tsv", sep = "_"), sep="/"), 
+              sep="\t", quote=FALSE, row.names=FALSE)
+  cat("Saving", paste(step1, step2, step3, "Norm_cpm10_normal.tsv", sep = "_"), "\n")
+  write.table(normal, file = paste(RDATA, paste(step1, step2, step3, "Norm_cpm10_normal.tsv", sep = "_"), sep="/"), 
+              sep="\t", quote=FALSE, row.names=FALSE)
+  cat("Saving", paste(step1, step2, step3, "Norm_cpm10_tumor.tsv", sep = "_"), "\n")
+  write.table(tumor, file = paste(RDATA, paste(step1, step2, step3, "Norm_cpm10_tumor.tsv", sep = "_"), sep="/"), 
+              sep="\t", quote=FALSE, row.names=FALSE)
+  cat("Saving", paste(step1, step2, step3, "Norm_cpm10_genelist.txt", sep = "_"), "\n")
+  write.table(symbols, file = paste(RDATA, paste(step1, step2, step3, "Norm_cpm10_genelist.txt", sep = "_"), sep="/"), 
+              sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
   }##########################################
   ## PCA
   ##########################################
@@ -385,7 +444,8 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
   cat("PCA scores arsyn plot generated.\n")
   
   pl<-ggplot(data=melt(log(assayData(myARSyN)$exprs+1)), aes(x=value, group=Var2, colour=Var2))+geom_density(show.legend = F)
-  pdf(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_cpm10_arsyn_densitylog.pdf", sep = "_"), sep="/"))
+  png(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_cpm10_arsyn_densitylog.png", sep = "_"), sep="/"),
+      width = w, height = h, pointsize = p)
   pl
   dev.off()
   
@@ -432,7 +492,7 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
   cat("Saving", paste(step1, step2, step3, "Norm_cpm10_genelist.txt", sep = "_"), "\n")
   write.table(symbols, file = paste(RDATA, paste(step1, step2, step3, "Norm_cpm10_genelist.txt", sep = "_"), sep="/"), 
               sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
-  cat("Saving", paste(step1, step2, step3, "Norm_cpm10_arsyn_all.RData", sep = "_"), "\n")
+  cat("Saving", paste(step1, step2, step3, "Norm_cpm10_arsyn.RData", sep = "_"), "\n")
   save(norm.data_cpm10_arsyn, file=paste(RDATA, paste(step1, step2, step3, "Norm_cpm10_arsyn.RData", sep = "_"), sep="/"), 
        compress="xz")
   }
