@@ -210,7 +210,7 @@ plot(pca.results$scores[,1:2], col = "white",
    xlim = range(pca.results$scores[,1:2]) + 0.02*rango*c(-1,1),
    ylim = range(pca.results$scores[,1:2]) + 0.02*rango*c(-1,1))
 points(pca.results$scores[,1], pca.results$scores[,2], col = mycol, cex = 1.5)  
-legend("topright", c("N", "T"),fill = c("black", "red2"), ncol = 2, pch = 1)
+legend("topright", c("N", "T"), col = c("black", "red2"), ncol = 2, pch = 1)
 
 # PC1 & PC3
 rango2 = diff(range(pca.results$scores[,c(1,3)]))
@@ -221,10 +221,9 @@ plot(pca.results$scores[,c(1,3)], col = "white",
    xlim = range(pca.results$scores[,c(1,3)]) + 0.02*rango2*c(-1,1),
    ylim = range(pca.results$scores[,c(1,3)]) + 0.02*rango2*c(-1,1))
 points(pca.results$scores[,1], pca.results$scores[,3], col = mycol, cex = 1.5)
-legend("topright", c("N", "T"),fill = c("black", "red2"), ncol = 2, pch = 1)
+legend("topright", c("N", "T"), col = c("black", "red2"), ncol = 2, pch = 1)
 dev.off()
 cat("PCA scores raw plot generated.\n")
-
 }#############################
 ##########################################################################
 ## GREAT JOB!!! YOU MADE IT TILL THE END!!!!
