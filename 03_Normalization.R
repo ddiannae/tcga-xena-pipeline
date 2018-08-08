@@ -57,9 +57,9 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
       conditions=mean10$Targets$Group,
       row.names=colnames(mean10$M)))
   
-  lenght.norm <- c("RPKM", "loess", "full")
-  gc.norm <- c("loess", "full")
-  between.nom <- c("tmm", "full")
+  lenght.norm <- c("full", "loess", "upper")
+  gc.norm <- c( "full", "loess", "upper")
+  between.nom <- c("full", "tmm", "upper")
   normalization.results <- data.frame()
   
   ## This function gets the relevant statistics for the regression methods for GC and Length bias
@@ -132,11 +132,7 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
   
   ## We try with length normalization first
   for (ln in lenght.norm) {
-    if (ln == "RPKM") {
-      ln.data <- rpkm(as.matrix(counts(mydataM10EDA)), long=mean10$Annot$Length)
-    } else {
-      ln.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$Length, which = ln)
-    }
+    ln.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$Length, which = ln)
     for (gcn in gc.norm) {
       gcn.data <- withinLaneNormalization(ln.data, mean10$Annot$GC, which = gcn)
       for (bn in between.nom) {
@@ -157,11 +153,7 @@ if(FALSE) {### NORMALIZATION METHODS TESTING
   for (gcn in gc.norm) {
     gcn.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$GC, which = gcn)
     for (ln in lenght.norm) {
-      if (ln == "RPKM") {
-        ln.data <- rpkm(gcn.data, long=mean10$Annot$Length)
-      } else {
-        ln.data <- withinLaneNormalization(gcn.data, mean10$Annot$Length, which = ln)
-      }
+      ln.data <- withinLaneNormalization(gcn.data, mean10$Annot$Length, which = ln)
       for (bn in between.nom) {
         if (bn == "tmm") {
           between.data <- tmm(ln.data, long = 1000, lc = 0, k = 0)
