@@ -11,16 +11,19 @@
 ###############################################################################
 ##Usefull Libraries
 ###############################################################################
+library("ggplot2")
+library("reshape2")
+library ("png") 
+library("grid")
+library("gridExtra")
 library("BiocParallel")
 library("parallel")
 library("NOISeq")
 library("EDASeq")
-library ("png") 
-library("grid")
-library("gridExtra")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
+Sys.umask("000")
 ###############################################################################
 ## Filter genes with low expression
 cat("#################\n")
@@ -123,13 +126,15 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
       rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
     })
     
-    plotname <- paste(step1, step2, step3, step3, sep = "_")
+    plotname <- paste(step1, step2, step3, sep = "_")
     png(paste(PLOTSNORMDIR, paste(plotname, "png", sep ="."), sep="/"),  height=h/2, width=w*(3/2))
-    par(oma = c(0, 0, 2, 0))
+    par(oma = c(0, 0, 1.5, 0))
     plot.new()
-    do.call(grid.arrange, c(thePlots,  ncol = 3))
+    do.call(grid.arrange, c(thePlots,  ncol = 3, nrow=1))
     mtext(plotname, outer = TRUE, cex = 1.5)
     dev.off()
+    
+    unlink(pngPlots)
     
     norm.set.results <- data.frame(step1, step2, step3, 
                                    l.stats.1$r2, l.stats.1$p, l.stats.2$r2, l.stats.2$p,
@@ -143,7 +148,42 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
                                     "RNA.PassedSamples", "RNA.PassedProportion")
     return(norm.set.results)
   } 
-  
+  ## Now we try with GC normalization first
+  for (gcn in gc.norm) {
+    gcn.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$GC, which = gcn)
+    for (ln in lenght.norm) {
+      ln.data <- withinLaneNormalization(gcn.data, mean10$Annot$Length, which = ln)
+      for (bn in between.nom) {
+        if (bn == "tmm") {
+          between.data <- tmm(ln.data, long = 1000, lc = 0, k = 0)
+        } else {
+          between.data <- betweenLaneNormalization(ln.data, which = bn, offset = FALSE)
+        }
+        cat("Testing with GC normalization: ", gcn, ",  length normalization: ", ln, " and between lane normalization: ", bn, "\n")
+        norm.noiseq.results <- getNOISeqResults(paste("GC", gcn, sep = "."), paste("Length", ln, sep = "."), paste("Between", bn, sep =  "."), 
+                                                between.data, mean10)
+        normalization.results <- rbind(normalization.results, norm.noiseq.results)                      
+      }
+    }
+  }
+    #  ## Now we try with GC normalization first
+  for (gcn in gc.norm) {
+    gcn.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$GC, which = gcn)
+    for (ln in lenght.norm) {
+      ln.data <- withinLaneNormalization(gcn.data, mean10$Annot$Length, which = ln)
+      for (bn in between.nom) {
+        if (bn == "tmm") {
+          between.data <- tmm(ln.data, long = 1000, lc = 0, k = 0)
+        } else {
+          between.data <- betweenLaneNormalization(ln.data, which = bn, offset = FALSE)
+        }
+        cat("Testing with GC normalization: ", gcn, ",  length normalization: ", ln, " and between lane normalization: ", bn, "\n")
+        norm.noiseq.results <- getNOISeqResults(paste("GC", gcn, sep = "."), paste("Length", ln, sep = "."), paste("Between", bn, sep =  "."), 
+                                                between.data, mean10)
+        normalization.results <- rbind(normalization.results, norm.noiseq.results)                      
+      }
+    }
+  }
   ## We try with length normalization first
   for (ln in lenght.norm) {
     ln.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$Length, which = ln)
@@ -163,24 +203,17 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
     }
   }
   
-  ## Now we try with GC normalization first
-  for (gcn in gc.norm) {
-    gcn.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$GC, which = gcn)
-    for (ln in lenght.norm) {
-      ln.data <- withinLaneNormalization(gcn.data, mean10$Annot$Length, which = ln)
-      for (bn in between.nom) {
-        if (bn == "tmm") {
-          between.data <- tmm(ln.data, long = 1000, lc = 0, k = 0)
-        } else {
-          between.data <- betweenLaneNormalization(ln.data, which = bn, offset = FALSE)
-        }
-        cat("Testing with GC normalization: ", gcn, ",  length normalization: ", ln, " and between lane normalization: ", bn, "\n")
-        norm.noiseq.results <- getNOISeqResults(paste("GC", gcn, sep = "."), paste("Length", ln, sep = "."), paste("Between", bn, sep =  "."), 
-                                                between.data, mean10)
-        normalization.results <- rbind(normalization.results, norm.noiseq.results)                      
-      }
-    }
-  }
+  pngPlots <- list.files(path = PLOTSNORMDIR, pattern = "*.png", full.names = TRUE)
+  
+  thePlots <- lapply (pngPlots, function(pngFile) {
+    rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
+  })
+  
+  pdf(paste(PLOTSDIR, "Normalization_Plots.pdf", sep="/"), title="Normalization Plots")
+  print(marrangeGrob(thePlots, nrow = 3, ncol = 1, top = NULL))
+  dev.off()
+  
+  rm(thePlots)
   cat("End of normalization texting\n")
   cat("Saving NormalizationResults.tsv\n") 
   write.table(normalization.results, file=paste(RDATA, "NormalizationResults.tsv", sep="/"), 
@@ -255,8 +288,6 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
   ## LOW EXPRESSION FILTERING
   ##########################################
   {
-  library("ggplot2")
-  library("reshape2")
   cat("Counts per million < 10 filter\n")
   ##Density plot
   pl<-ggplot(data=melt(log(norm.data$M+1)), aes(x=value, group=Var2, colour=Var2))+geom_density(show.legend = F)
