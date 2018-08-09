@@ -48,7 +48,7 @@ DATADIR <- args[1]
 RDATA <- paste(DATADIR, "rdata", sep="")
 dir.create(RDATA)
 cat('Data directory: ', DATADIR, '\n')
-
+Sys.umask("000")
 ###############################################################################
 ##Usefull Libraries
 ###############################################################################

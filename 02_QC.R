@@ -37,6 +37,7 @@ library("NOISeq")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
+Sys.umask("000")
 ###############################################################################
 ##Quality Control
 ###############################################################################
