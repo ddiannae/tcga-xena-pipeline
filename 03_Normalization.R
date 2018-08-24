@@ -20,6 +20,8 @@ library("BiocParallel")
 library("parallel")
 library("NOISeq")
 library("EDASeq")
+library("DESeq2")
+library("cqn")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
@@ -41,20 +43,23 @@ p <- 24
 ##########################################################################
 if(TRUE) {### NORMALIZATION METHODS TESTING
   ###########################################################################
-  load(file=paste(RDATA, "RawFull.RData", sep="/"))
-  { ### We keep only genes with mean expression count > 10 
-  exp.genes <- apply(full$M, 1, function(x) mean(x)>10)
-  egtable <- table(exp.genes)
-  # FALSE  TRUE 
-  #  2234 17215
-  cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
+ # load(file=paste(RDATA, "RawFull.RData", sep="/"))
+ # { ### We keep only genes with mean expression count > 10 
+ # exp.genes <- apply(full$M, 1, function(x) mean(x)>10)
+ # egtable <- table(exp.genes)
+ # # FALSE  TRUE 
+ # #  2234 17215
+ # cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
+ # 
+ # ##Filtering low expression genes
+ # mean10 <- list(M=full$M[exp.genes, ], Annot=full$Annot[exp.genes, ], Targets=full$Targets)
+ # rownames(mean10$Annot) <- rownames(mean10$M)
+ # cat("Saving Mean10.RData \n") 
+ # save(mean10, file=paste(RDATA, "Mean10.RData", sep="/"), compress="xz")
+ # }
   
-  ##Filtering low expression genes
-  mean10 <- list(M=full$M[exp.genes, ], Annot=full$Annot[exp.genes, ], Targets=full$Targets)
-  rownames(mean10$Annot) <- rownames(mean10$M)
-  cat("Saving Mean10.RData \n") 
-  save(mean10, file=paste(RDATA, "Mean10.RData", sep="/"), compress="xz")
-  }
+  load(file=paste(RDATA, "Mean10.RData", sep="/"))
+  
   cat("Testing normalization methods\n.")
   mydataM10EDA <- EDASeq::newSeqExpressionSet(
     counts=mean10$M,
@@ -63,9 +68,9 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
       conditions=mean10$Targets$Group,
       row.names=colnames(mean10$M)))
   
-  lenght.norm <- c("full", "loess", "upper")
-  gc.norm <- c( "full", "loess", "upper")
-  between.nom <- c("full", "tmm", "upper")
+  lenght.norm <- c("full","median", "loess", "upper")
+  gc.norm <- c( "median")
+  between.nom <- c("full", "median", "tmm", "upper")
   normalization.results <- data.frame()
   
   ## This function gets the relevant statistics for the regression methods for GC and Length bias
@@ -148,7 +153,8 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
                                     "RNA.PassedSamples", "RNA.PassedProportion")
     return(norm.set.results)
   } 
-  ## Now we try with GC normalization first
+  
+  ## We try with GC normalization first
   for (gcn in gc.norm) {
     gcn.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$GC, which = gcn)
     for (ln in lenght.norm) {
@@ -166,25 +172,8 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
       }
     }
   }
-    #  ## Now we try with GC normalization first
-  for (gcn in gc.norm) {
-    gcn.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$GC, which = gcn)
-    for (ln in lenght.norm) {
-      ln.data <- withinLaneNormalization(gcn.data, mean10$Annot$Length, which = ln)
-      for (bn in between.nom) {
-        if (bn == "tmm") {
-          between.data <- tmm(ln.data, long = 1000, lc = 0, k = 0)
-        } else {
-          between.data <- betweenLaneNormalization(ln.data, which = bn, offset = FALSE)
-        }
-        cat("Testing with GC normalization: ", gcn, ",  length normalization: ", ln, " and between lane normalization: ", bn, "\n")
-        norm.noiseq.results <- getNOISeqResults(paste("GC", gcn, sep = "."), paste("Length", ln, sep = "."), paste("Between", bn, sep =  "."), 
-                                                between.data, mean10)
-        normalization.results <- rbind(normalization.results, norm.noiseq.results)                      
-      }
-    }
-  }
-  ## We try with length normalization first
+  
+  ## We try with length normalization now
   for (ln in lenght.norm) {
     ln.data <- withinLaneNormalization(counts(mydataM10EDA), mean10$Annot$Length, which = ln)
     for (gcn in gc.norm) {
@@ -202,7 +191,20 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
       }
     }
   }
+
+  ## Finally, we test with cqn
+  ##Length, GC content and size correction
+  cat("Testing with cqn normalization\n")
+  y_DESeq<-DESeqDataSetFromMatrix(countData=mean10$M, 
+                                  colData=mean10$Targets, design= ~Group)
+  y_DESeq<-estimateSizeFactors(y_DESeq)
   
+  cqn.mean10<- cqn(mean10$M, lengths=mean10$Annot$Length,
+                   x = mean10$Annot$GC, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
+  normalized.cqn <- cqn.mean10$y + cqn.mean10$offset
+  norm.noiseq.results <- getNOISeqResults("Length.cqn", "GC.cqn", "Between.cqn", normalized.cqn, mean10)
+  
+  normalization.results <- rbind(normalization.results, norm.noiseq.results)
   pngPlots <- list.files(path = PLOTSNORMDIR, pattern = "*.png", full.names = TRUE)
   
   thePlots <- lapply (pngPlots, function(pngFile) {
@@ -213,11 +215,10 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
   print(marrangeGrob(thePlots, nrow = 3, ncol = 1, top = NULL))
   dev.off()
   
-  rm(thePlots)
   cat("End of normalization texting\n")
   cat("Saving NormalizationResults.tsv\n") 
-  write.table(normalization.results, file=paste(RDATA, "NormalizationResults.tsv", sep="/"), 
-              quote = F, sep = "\t", row.names = F)
+ # write.table(normalization.results, file=paste(RDATA, "NormalizationResults.tsv", sep="/"), 
+ #              quote = F, sep = "\t", row.names = F)
 } else {
   {##### USER SELECTED NORMALIZATION
   load(file=paste(RDATA, "Mean10.RData", sep="/"))
