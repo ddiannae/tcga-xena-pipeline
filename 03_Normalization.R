@@ -25,7 +25,7 @@ library("cqn")
 # register(SnowParam(workers=detectCores()-1, progress=TRUE))#Windows
 register(MulticoreParam(workers=detectCores()-1, progress=TRUE))#Linux
 options(width=80)
-Sys.umask("000")
+Sys.umask("003")
 ###############################################################################
 ## Filter genes with low expression
 cat("#################\n")
@@ -41,24 +41,29 @@ h <- 1024
 p <- 24
 
 ##########################################################################
-if(TRUE) {### NORMALIZATION METHODS TESTING
+if (TRUE) {### NORMALIZATION METHODS TESTING
   ###########################################################################
- # load(file=paste(RDATA, "RawFull.RData", sep="/"))
- # { ### We keep only genes with mean expression count > 10 
- # exp.genes <- apply(full$M, 1, function(x) mean(x)>10)
- # egtable <- table(exp.genes)
- # # FALSE  TRUE 
- # #  2234 17215
- # cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
- # 
- # ##Filtering low expression genes
- # mean10 <- list(M=full$M[exp.genes, ], Annot=full$Annot[exp.genes, ], Targets=full$Targets)
- # rownames(mean10$Annot) <- rownames(mean10$M)
- # cat("Saving Mean10.RData \n") 
- # save(mean10, file=paste(RDATA, "Mean10.RData", sep="/"), compress="xz")
- # }
+  load(file=paste(RDATA, "RawFull.RData", sep="/"))
+  { ### We keep only genes with mean expression count > 10 
+  exp.genes <- apply(full$M, 1, function(x) mean(x)>10)
+  egtable <- table(exp.genes)
+  # FALSE  TRUE 
+  #  2234 17215
+  cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
   
-  load(file=paste(RDATA, "Mean10.RData", sep="/"))
+  ##Filtering low expression genes
+  mean10 <- list(M=full$M[exp.genes, ], Annot=full$Annot[exp.genes, ], Targets=full$Targets)
+  rownames(mean10$Annot) <- rownames(mean10$M)
+  
+  cat("Filtering protein coding features \n")
+  protein.coding <- rownames(mean10$Annot[mean10$Annot$Type == "protein_coding", ])
+  cat("There are ", length(protein.coding), " features with type: protein_coding \n")
+  mean10 <- list(M=mean10$M[protein.coding, ], Annot=mean10$Annot[protein.coding, ], Targets=mean10$Targets)
+
+  cat("Saving Mean10_ProteinCoding.RData \n") 
+  save(mean10, file=paste(RDATA, "Mean10_ProteinCoding.RData", sep="/"), compress="xz")
+  }
+  load(file=paste(RDATA, "Mean10_ProteinCoding.RData", sep="/"))
   
   cat("Testing normalization methods\n.")
   mydataM10EDA <- EDASeq::newSeqExpressionSet(
@@ -68,8 +73,8 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
       conditions=mean10$Targets$Group,
       row.names=colnames(mean10$M)))
   
-  lenght.norm <- c("full","median", "loess", "upper")
-  gc.norm <- c( "median")
+  lenght.norm <- c("full", "loess", "median", "upper")
+  gc.norm <- c( "full", "loess", "median", "upper")
   between.nom <- c("full", "median", "tmm", "upper")
   normalization.results <- data.frame()
   
@@ -202,7 +207,7 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
   cqn.mean10<- cqn(mean10$M, lengths=mean10$Annot$Length,
                    x = mean10$Annot$GC, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
   normalized.cqn <- cqn.mean10$y + cqn.mean10$offset
-  norm.noiseq.results <- getNOISeqResults("Length.cqn", "GC.cqn", "Between.cqn", normalized.cqn, mean10)
+  norm.noiseq.results <- getNOISeqResults("GC.cqn", "Length.cqn", "Between.cqn", normalized.cqn, mean10)
   
   normalization.results <- rbind(normalization.results, norm.noiseq.results)
   pngPlots <- list.files(path = PLOTSNORMDIR, pattern = "*.png", full.names = TRUE)
@@ -217,11 +222,11 @@ if(TRUE) {### NORMALIZATION METHODS TESTING
   
   cat("End of normalization texting\n")
   cat("Saving NormalizationResults.tsv\n") 
- # write.table(normalization.results, file=paste(RDATA, "NormalizationResults.tsv", sep="/"), 
- #              quote = F, sep = "\t", row.names = F)
+   write.table(normalization.results, file=paste(RDATA, "NormalizationResults.tsv", sep="/"), 
+               quote = F, sep = "\t", row.names = F)
 } else {
   {##### USER SELECTED NORMALIZATION
-  load(file=paste(RDATA, "Mean10.RData", sep="/"))
+  load(file=paste(RDATA, "Mean10_ProteinCoding.RData", sep="/"))
   ln.data <- withinLaneNormalization(mean10$M, mean10$Annot$Length, which = "full")
   gcn.data <- withinLaneNormalization(ln.data, mean10$Annot$GC, which = "full")
   norm.counts <- tmm(gcn.data, long = 1000, lc = 0, k = 0)

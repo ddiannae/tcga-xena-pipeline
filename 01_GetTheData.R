@@ -42,13 +42,13 @@ cat("###########################\n")
 cat("Step 1: Get The Data\n")
 cat("###########################\n")
 cat("Creating directorys\n")
+Sys.umask("003")
 DATADIR <- '/pipeline/data/'
 args <- commandArgs(trailingOnly = TRUE)
 DATADIR <- args[1]
 RDATA <- paste(DATADIR, "rdata", sep="")
 dir.create(RDATA)
 cat('Data directory: ', DATADIR, '\n')
-Sys.umask("000")
 ###############################################################################
 ##Usefull Libraries
 ###############################################################################
