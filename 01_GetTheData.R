@@ -142,8 +142,8 @@ cat('TumorRaw.RData saved \n')
 ##      -Save clean data
 ###############################################################################
 ## Read the file
-cat('Working with annotation file: Biomart_EnsemblG93_GRCh38_p12_NoSymbol.txt \n')
-annot<-read.delim(file="/pipeline/Biomart_EnsemblG93_GRCh38_p12_NoSymbol.txt", sep="\t")
+cat('Working with annotation file: Biomart_EnsemblG94_GRCh38_p12.txt \n')
+annot<-read.delim(file="/pipeline/Biomart_EnsemblG94_GRCh38_p12.txt", sep="\t")
 
 names(annot)<-c("EnsemblID", "Chr", "Start", "End", "GC", "Type")
 annot$Length<-abs(annot$End - annot$Start)

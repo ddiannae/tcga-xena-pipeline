@@ -41,28 +41,28 @@ h <- 1024
 p <- 24
 
 ##########################################################################
-if (TRUE) {### NORMALIZATION METHODS TESTING
-  ###########################################################################
-  load(file=paste(RDATA, "RawFull.RData", sep="/"))
-  { ### We keep only genes with mean expression count > 10 
-  exp.genes <- apply(full$M, 1, function(x) mean(x)>10)
-  egtable <- table(exp.genes)
-  # FALSE  TRUE 
-  #  2234 17215
-  cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
-  
-  ##Filtering low expression genes
-  mean10 <- list(M=full$M[exp.genes, ], Annot=full$Annot[exp.genes, ], Targets=full$Targets)
-  rownames(mean10$Annot) <- rownames(mean10$M)
-  
-  cat("Filtering protein coding features \n")
-  protein.coding <- rownames(mean10$Annot[mean10$Annot$Type == "protein_coding", ])
-  cat("There are ", length(protein.coding), " features with type: protein_coding \n")
-  mean10 <- list(M=mean10$M[protein.coding, ], Annot=mean10$Annot[protein.coding, ], Targets=mean10$Targets)
+load(file=paste(RDATA, "RawFull.RData", sep="/"))
+{ ### We keep only genes with mean expression count > 10 
+exp.genes <- apply(full$M, 1, function(x) mean(x)>10)
+egtable <- table(exp.genes)
+# FALSE  TRUE 
+#  2234 17215
+cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
 
-  cat("Saving Mean10_ProteinCoding.RData \n") 
-  save(mean10, file=paste(RDATA, "Mean10_ProteinCoding.RData", sep="/"), compress="xz")
-  }
+##Filtering low expression genes
+mean10 <- list(M=full$M[exp.genes, ], Annot=full$Annot[exp.genes, ], Targets=full$Targets)
+rownames(mean10$Annot) <- rownames(mean10$M)
+
+cat("Filtering protein coding features \n")
+protein.coding <- rownames(mean10$Annot[mean10$Annot$Type == "protein_coding", ])
+cat("There are ", length(protein.coding), " features with type: protein_coding \n")
+mean10 <- list(M=mean10$M[protein.coding, ], Annot=mean10$Annot[protein.coding, ], Targets=mean10$Targets)
+
+cat("Saving Mean10_ProteinCoding.RData \n") 
+save(mean10, file=paste(RDATA, "Mean10_ProteinCoding.RData", sep="/"), compress="xz")
+}
+if (FALSE) {### NORMALIZATION METHODS TESTING
+  ###########################################################################
   load(file=paste(RDATA, "Mean10_ProteinCoding.RData", sep="/"))
   
   cat("Testing normalization methods\n.")
@@ -226,13 +226,16 @@ if (TRUE) {### NORMALIZATION METHODS TESTING
                quote = F, sep = "\t", row.names = F)
 } else {
   {##### USER SELECTED NORMALIZATION
+  cat("Loading data\n")
   load(file=paste(RDATA, "Mean10_ProteinCoding.RData", sep="/"))
-  ln.data <- withinLaneNormalization(mean10$M, mean10$Annot$Length, which = "full")
+  ln.data <- withinLaneNormalization(mean10$M, mean10$Annot$Length, which = "upper")
   gcn.data <- withinLaneNormalization(ln.data, mean10$Annot$GC, which = "full")
-  norm.counts <- tmm(gcn.data, long = 1000, lc = 0, k = 0)
+ # norm.counts <- betweenLaneNormalization(ln.data, which = "median", offset = FALSE)
+  norm.counts <-  tmm(gcn.data, long = 1000, lc = 0, k = 0)
   step1 <- "Length.full"
   step2 <- "GC.full"
   step3 <- "Between.tmm"
+  cat("Performing normalization. Step1: ", step1, ", Step2: ", step2, " Step3: ", step3, "\n")
   ##### After normalization is done
   ##### Step1, step2, step3
   }##########################################
@@ -284,6 +287,13 @@ if (TRUE) {### NORMALIZATION METHODS TESTING
   dev.off()
   cat("Counts distribution barplot for protein coding biotype and all samples generated\n")
   
+  mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "protein_coding_boxplot_group.png", sep = "_"), sep="/"), 
+      width=w*2, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "boxplot")
+  dev.off()
+  cat("Counts distribution plot for protein coding grouped generated\n")
+  
   # Saving normalized data
   norm.data <- mean10
   norm.data$M <- norm.counts
@@ -299,7 +309,21 @@ if (TRUE) {### NORMALIZATION METHODS TESTING
   pl<-ggplot(data=melt(log(norm.data$M+1)), aes(x=value, group=Var2, colour=Var2))+geom_density(show.legend = F)
   png(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_densitylog.png", sep = "_"), sep="/"), 
       width = w, height = h, pointsize = p)
-  pl
+  print(pl)
+  mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "protein_coding_boxplot_group.png", sep = "_"), sep="/"), 
+      width=w*2, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "boxplot")
+  dev.off()
+  cat("Counts distribution plot for protein coding and all samples generated\n")
+  
+  mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected", "protein_coding_boxplot_group.png", sep = "_"), sep="/"), 
+      width=w*2, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "boxplot")
+  dev.off()
+  cat("Counts distribution plot for protein coding and all samples generated\n")
+  
   dev.off()
   cat("Density plot for all samples generated\n")
   
@@ -319,7 +343,7 @@ if (TRUE) {### NORMALIZATION METHODS TESTING
   pl<-ggplot(data=melt(log(norm.data.cpm10$M+1)), aes(x=value, group=Var2, colour=Var2))+geom_density(show.legend = F)
   png(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_cpm10_densitylog.png", sep = "_"), sep="/"),
       width = w, height = h, pointsize = p)
-  pl
+  print(pl)
   dev.off()
   cat("Density plot for all samples after cpm10 filter generated\n")
   
@@ -483,9 +507,23 @@ if (TRUE) {### NORMALIZATION METHODS TESTING
   pl<-ggplot(data=melt(log(assayData(myARSyN)$exprs+1)), aes(x=value, group=Var2, colour=Var2))+geom_density(show.legend = F)
   png(file=paste(PLOTSDIR, paste(step1, step2, step3, "corrected_cpm10_arsyn_densitylog.png", sep = "_"), sep="/"),
       width = w, height = h, pointsize = p)
-  pl
+  print(pl)
   dev.off()
   
+  mydata <- NOISeq::readData(
+    data =  assayData(myARSyN)$exprs, 
+    length =  norm.data.cpm10$Annot[, c("EnsemblID", "Length")], 
+    biotype =  norm.data.cpm10$Annot[, c("EnsemblID", "Type")], 
+    chromosome =  norm.data.cpm10$Annot[, c("Chr", "Start", "End")], 
+    factors =  norm.data.cpm10$Targets[, "Group",drop=FALSE], 
+    gc =  norm.data_cpm10_arsyn$Annot[, c("EnsemblID", "GC")])
+
+  mycountsbio <- dat(mydata, factor = "Group", type = "countsbio")
+  png(paste(PLOTSDIR, paste(step1, step2, step3, "corrected_arsyn", "protein_coding_boxplot_group.png", sep = "_"), sep="/"), 
+        width=w*2, height=h, pointsize=p)
+    explo.plot(mycountsbio, toplot = "protein_coding", samples = NULL, plottype = "boxplot")
+  dev.off()
+
   cat('ARSyN data. Final dimensions: ', paste(dim(assayData(myARSyN)$exprs), collapse=", "), '.\n')
   
   ##Saving everything
