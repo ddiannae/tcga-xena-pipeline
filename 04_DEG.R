@@ -61,12 +61,14 @@ LDEG <- list(M = cpm(M, log = TRUE), Targets = targets)
 # El resultado es que muchos genes son diferencialmente expresados
 design <- model.matrix(~1+Group, data = LDEG$Targets)
 rownames(design) <- LDEG$Targets$ID
+#colnames(design) <-c("Healthy", "Basal", "Her2", "LumA", "LumB")
 M <- LDEG$M
 
 ######### AJUSTE
 fit <- lmFit(M, design)
 head(fit$coefficients)
 
+#########################
 eval <- FALSE
 ######### EVALUAR P-Vals y LFC
 ######  Buscando los genes diferenciales cortados por los alphas
@@ -114,32 +116,40 @@ if(eval) {
   ##############################################################
   
 } else {
-  #### Obtener valores para todos los genes 
-  LFCsel <- treat(fit, lfc = 0)
-  LFCsel$fdr <- apply(LFCsel$p.value, 2, p.adjust, method="fdr")
-  p <- 1-LFCsel$fdr ##Probabilidad de salir diferencialºº
-  LFCsel$B <- log(p/(1-p))
+  #### Obtener valores para todos los genes
+  # contr.matrix <- makeContrasts(
+  #   HealthyvsBasal = Basal-Healthy, 
+  #   HealthyvsHer2 = Healthy-Her2, 
+  #   HealthyvsLumA = Healthy-LumA, 
+  #   HealthyvsLumB = Healthy-LumB, 
+  #   levels = colnames(design))
+  # LFCFit <- contrasts.fit(fit, contr.matrix)
+  LFCFit <- eBayes(fit)
+  LFCFit$fdr <- apply(LFCFit$p.value, 2, p.adjust, method="fdr")
+  p <- 1-LFCFit$fdr ##Probabilidad de salir diferencialºº
+  LFCFit$B <- log(p/(1-p))
 }
 
 
 #Glimma plot
-dt <- decideTests(LFCsel) #### NO ENTENDI
+dt <- decideTests(LFCFit, lfc = 0) #### NO ENTENDI
 #La ocupamos despues para pintar las redes y por eso la guardamos...
-write.table(dt, file = "dt-all.txt", quote = FALSE, sep = "\t", row.names = TRUE, col.names = T )
+write.table(dt, file = "deg/dt-ebayes-all.txt", quote = FALSE, sep = "\t", row.names = TRUE, col.names = T )
 summary(dt)
-glMDPlot(path = DEGDATA, LFCsel, counts = M, groups = Group, status = dt)
+glMDPlot(path = DEGDATA, LFCFit, counts = M, groups = Group, status = dt)
 
-lapply(tnames, function(tname) {
-  gname <- paste0("Groupt", tname)
+lapply(tnames, function(name) {
+  tname <- paste0("Groupt", name)
   genesFULL<-cbind(
-    Gene = rownames(LFCsel$coefficients),
-    Coef = LFCsel$coefficients[, c("(Intercept)", gname)],
-    p.value = LFCsel$p.value[, gname],
-    FDR = LFCsel$fdr[, gname],
-    B = LFCsel$B[, gname]
+    Gene = rownames(LFCFit$coefficients),
+    Coef = LFCFit$coefficients[,c("(Intercept)", tname)],
+    p.value = LFCFit$p.value[, tname],
+    FDR = LFCFit$fdr[, tname],
+    B = LFCFit$B[, tname]
   )
   
-  fname <- paste("Treat-",tname,".tsv",sep = "")
+  fname <- paste("ebayes-",tname,".tsv",sep = "")
   write.table(genesFULL, file =  paste(DEGDATA, fname, sep="/"), quote = FALSE, sep = "\t", row.names = F, col.names = TRUE )
 })
+
 
