@@ -7,7 +7,7 @@ RUN R -f 00_InstallPackages.R
 FROM rocker/r-ver:3.4.4
 WORKDIR /pipeline
 COPY --from=builder-r /usr/local/lib/R/site-library /usr/local/lib/R/site-library
-COPY ["Biomart_EnsemblG93_GRCh38_p12_NoSymbol.txt", "01_GetTheData.R", "02_QC.R", "03_Normalization.R", "start.sh", "/pipeline/"]
+COPY ["Biomart_EnsemblG94_GRCh38_p12.txt", "01_GetTheData.R", "02_QC.R", "03_Normalization.R", "start.sh", "/pipeline/"]
 COPY gdc-client /usr/local/bin/
 RUN apt-get update \
   && apt-get -y install --fix-missing libssl-dev libcurl4-openssl-dev libxml2-dev zlib1g-dev libmariadb-client-lgpl-dev libpng-dev 

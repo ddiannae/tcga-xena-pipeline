@@ -4,6 +4,7 @@ echo Hello World
 echo $PRIMARY_SITE
 
 DATADIR="data/"
+install -d -m 775 data/counts
 CANCERDIR="data/counts/cancer"
 install -d -m 775 $CANCERDIR
 HEALTHYDIR="data/counts/healthy"
