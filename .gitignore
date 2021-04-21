@@ -2,7 +2,6 @@ start_local.sh
 .Rproj.user
 *~
 .Rhistory
-.Rprofile
 *.swp
 .snakemake
 .snakemake/*
