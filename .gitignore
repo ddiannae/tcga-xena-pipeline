@@ -6,5 +6,5 @@ start_local.sh
 .snakemake
 .snakemake/*
 *.Rproj
-renv
-renv/*
+renv/local
+renv/local/*
