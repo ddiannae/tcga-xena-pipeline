@@ -15,7 +15,7 @@ else:
 
 sst = sample_type
 
-if (sample_type == "tumor"):
+if (sample_type == "cancer"):
     sample_type = "primary tumor"
 elif (sample_type == "normal"):
     sample_type = "solid tissue normal"

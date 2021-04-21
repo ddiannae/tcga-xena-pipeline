@@ -111,7 +111,7 @@ dir.create(RDATADIR)
   cat("Reading original file \n")
   ## Annotation file used for RNA-seq pipeline according to:
   ## https://gdc.cancer.gov/about-data/gdc-data-processing/gdc-reference-files
-  annot <- rtracklayer::import('input/gencode.v22.annotation.gtf')
+  annot <- rtracklayer::import('input/gencode.v22.annotation.gtf.gz')
   annot <- as.data.frame(annot)
   
   ## Only protein coding genes
@@ -123,7 +123,7 @@ dir.create(RDATADIR)
   
   cat("Reading new file \n")
   ## Newest gencode file. April, 2021.
-  annot_new <-  rtracklayer::import('input/gencode.v37.annotation.gtf')
+  annot_new <-  rtracklayer::import('input/gencode.v37.annotation.gtf.gz')
   annot_new <- as.data.frame(annot_new)
   annot_new <- annot_new %>% dplyr::select(gene_id, seqnames, start, end, type, 
                                       gene_type, gene_name) %>% 
