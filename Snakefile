@@ -3,7 +3,7 @@
 ## Tissue type just like in GDC, lowercase is fine
 #TISSUES = ["prostate", "pancreas", "bladder", "skin", "brain", "liver", "esophagus", "breast", "lung", "kidney", "colorectal", "uterus", "thyroid"]
 TISSUES = ["esophagus"]
-DATADIR ="/datos/ot/diana/regulacion-trans"
+DATADIR ="~/Workspace/regulaciontrans-data"
 FIGDIR = "figures"
 files = [] 
 for t in TISSUES:
