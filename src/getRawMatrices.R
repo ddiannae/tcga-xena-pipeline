@@ -17,7 +17,6 @@
 ## Get the Work and Data dir
 library(readr)
 library(dplyr)
-library(biomaRt)
 library(rtracklayer)
 
 args <- commandArgs(trailingOnly = T)
@@ -142,21 +141,15 @@ dir.create(RDATADIR)
   
   ## We need GC content per gene for normalization. 
   ## Query Biomart 80 (accoring to gencode.v22.annotation.gtf, version 79 was used
-  ## but it is no longer accesible using the R package)
-  httr::set_config(httr::config(ssl_verifypeer = FALSE))
-  ensembl <- useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl", 
-                        version = 80)
-  
-  cat("Getting GC content info from BioMart \n")
-  annot_gc <- getBM(attributes = c('ensembl_gene_id', 'version', 'percentage_gc_content'),
-        filters = 'ensembl_gene_id',
-        values = annot$ensembl_id, 
-        mart = ensembl)
+  ## but it is no longer accessible in the website)
+  ## http://may2015.archive.ensembl.org/biomart
+  biomart <- read_tsv("input/Biomart_Ensembl80_GRCh38_p2.txt", 
+                      col_names = c("ensembl_id", "version", "gc"), skip = 1)
   
   ## Get only genes matching ensemblID and version
-  annot_gc <- annot_gc %>% mutate(gene_id = paste(ensembl_gene_id, version, sep="."))
+  biomart <- biomart %>% mutate(gene_id = paste(ensembl_id, version, sep="."))
   annot <- annot %>%
-    inner_join(annot_gc %>% dplyr::select(-ensembl_gene_id, -version), by = "gene_id")
+    inner_join(biomart %>% dplyr::select(-ensembl_id, -version), by = "gene_id")
    
   annot <- annot %>% mutate(chr = gsub("chr", "", seqnames)) %>%
     dplyr::select(-seqnames) %>%   dplyr::select(gene_id, chr, everything())
