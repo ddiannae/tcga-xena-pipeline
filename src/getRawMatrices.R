@@ -114,7 +114,7 @@ dir.create(RDATADIR)
   annot <- as.data.frame(annot)
   
   ## Only protein coding genes
-  annot <- annot %>% dplyr::select(gene_id, seqnames, start, end, type, 
+  annot <- annot %>% dplyr::select(gene_id, seqnames, start, end, width, type, 
                                             gene_type, gene_name) %>% 
     filter(type == "gene" & gene_type == "protein_coding")
   
@@ -124,7 +124,7 @@ dir.create(RDATADIR)
   ## Newest gencode file. April, 2021.
   annot_new <-  rtracklayer::import('input/gencode.v37.annotation.gtf.gz')
   annot_new <- as.data.frame(annot_new)
-  annot_new <- annot_new %>% dplyr::select(gene_id, seqnames, start, end, type, 
+  annot_new <- annot_new %>% dplyr::select(gene_id, seqnames, start, end, width, type, 
                                       gene_type, gene_name) %>% 
     filter(type == "gene" & gene_type == "protein_coding")
   
