@@ -1,0 +1,222 @@
+##############################################################################
+## CHROMATIN AND GENE REGULATION: FROM GENE TO GENOME FOLDING
+## Practical session: In silico analysis of RNA-Seq data.
+###############################################################################
+## Data preparation: 
+##      -Quality Control
+## Author: 
+##          Dr. Cristobal Fresno - cristobalfresno@gmail.com
+## Date: 2016-12-12
+###############################################################################
+## Quality Control 
+##      -Let's keep only the GC & length annotated genes
+##      -EXPLORATORY ANALYSIS (NOISeq package)
+##          -Reading data into NOISeq package -> mydata
+##          -Plots
+##              -Biodetection plot
+##              -Count distribution per biotype
+##              -Saturation plot
+##              -Count distribution per sample
+##              -Count distribution per Experimental factors
+##          -Bias
+##              -Length bias detection
+##              -GC bias
+##              -RNA composition
+##          -Quality Control Report 
+##     -Basal situation
+##          GC content bias: Detected
+##         Gene Length bias: Detected
+##         RNA content bias: Detected
+##      -PCA
+##############################################################################
+
+library(dplyr)
+library(NOISeq)
+
+args <- commandArgs(trailingOnly = T)
+
+if (length(args) < 2 ) {
+  stop("Incorrect number of arguments", call.=FALSE)
+} else {
+  TISSUE = args[1]
+  DATADIR = args[2]
+}
+
+DATADIR <- paste(DATADIR, TISSUE, sep="/")
+RDATA <- paste(DATADIR, "rdata", sep="/")
+PLOTSDIR <-paste(DATADIR, "plots", sep="/")
+dir.create(PLOTSDIR)
+w <- 1024
+h <- 1024
+p <- 24
+
+load(file=paste(RDATA, "raw_full.RData", sep="/"))
+##########################################
+## EXPLORATORY ANALYSIS (NOISeq package)
+##########################################
+{
+  ## Reading data into NOISeq package -> mydata
+  rownames(full$annot) <- full$annot$gene_id
+  ids <- full$M$gene_id
+  full$M <- full$M %>% select(-gene_id) %>% as.matrix() 
+  rownames(full$M) <- ids
+  full$M <- full$M[,full$targets$id]
+  
+  mydata <- NOISeq::readData(
+    data = full$M, 
+    length = full$annot %>% select(gene_id, width), 
+    biotype = full$annot %>% select(gene_id, gene_type), 
+    chromosome = full$annot %>% select(chr, start, end), 
+    factors = full$targets %>% select(group),
+    gc = full$annot %>% select(gene_id, gc))
+
+}
+##########################################
+## Plots
+##########################################
+{
+  # Biodetection plot. Per group.
+  mybiodetection <- dat(mydata, type="biodetection", factor="group", k=0)
+  png(filename=paste(PLOTSDIR, "biodetection.Rd_%03d.png", sep="/"), 
+      width=w, height=h, pointsize=p)
+  explo.plot(mybiodetection)
+  dev.off()
+  cat("Biodetection plots generated\n")
+  
+
+  ## Count distribution per biotype. Using count per million, only for one sample
+  mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+  png(filename=paste(PLOTSDIR, "countsbio.png", sep="/"), width=w, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = 1, samples = 1, plottype = "boxplot")
+  dev.off()
+  cat("Counts distribution plot per biotype and one sample generated\n")
+  #What about expression level?
+
+  ## Count distribution per sample
+  mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
+  png(paste(PLOTSDIR, "protein_coding_boxplot.png", sep="/"), width=w*2, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = "protein_coding",
+      samples = NULL, plottype = "boxplot")
+  dev.off()
+  cat("Counts distribution plot for protein coding and all samples generated\n")
+
+  png(paste(PLOTSDIR, "protein_coding_barplot.png", sep="/"), width=w*2, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = "protein_coding",
+      samples = NULL, plottype = "barplot")
+  dev.off()
+  cat("Counts distribution barplot for protein coding biotype and all samples generated\n")
+
+  mycountsbio <- dat(mydata, factor = "group", type = "countsbio")
+  ## Count distribution per Experimental factors
+  png(paste(PLOTSDIR, "protein_coding_boxplot_group.png", sep="/"), width=w, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = "protein_coding",
+      samples = NULL, plottype = "boxplot")
+  dev.off()
+  cat("Counts distribution boxplot for protein coding biotype and group generated\n")
+
+  png(paste(PLOTSDIR, "protein_coding_barplot_group.png", sep="/"),
+      width=w, height=h, pointsize=p)
+  explo.plot(mycountsbio, toplot = "protein_coding",
+      samples = NULL, plottype = "barplot")
+  dev.off()
+  cat("Counts distribution barplot for protein coding biotype and group generated\n")
+  # How much sensitivity we loose? 
+
+  ## Saturation plot. 
+  ## We're not getting the saturation plot because it takes too long and doesn't give
+  ## us that useful information.
+  #mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
+  #png(paste(PLOTSDIR, "saturation.png", sep="/"), width=w, height=h, pointsize=p)
+  #explo.plot(mysaturation, toplot="protein_coding",
+  #           samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
+  #dev.off()
+  #What about the depth of our samples?
+
+}##########################################
+## Bias
+##########################################
+{
+  ## Length bias detection
+  mylengthbias <- dat(mydata, factor="group", type="lengthbias")
+  png(paste(PLOTSDIR, "lengthbias.png", sep="/"), width=w, height=h, pointsize=p)
+  explo.plot(mylengthbias, samples = NULL, toplot = "global")
+  dev.off()
+  cat("Lenght bias plot generated\n")
+  #Do we see a clear pattern?
+
+  ##GC bias
+  mygcbias <- dat(mydata, factor = "group", type="GCbias")
+  png(paste(PLOTSDIR, "gcbias.png", sep="/"), width=w, height=h, pointsize=p)
+  explo.plot(mygcbias, samples = NULL, toplot = "global")
+  dev.off()
+  cat("GC bias plot generated\n")
+  #Do we see a clear pattern?
+
+  ## RNA composition
+  mycomp <- dat(mydata, type="cd")
+  png(paste(PLOTSDIR, "RNAComposition.png", sep="/"), width=w, height=h, pointsize=p)
+  explo.plot(mycomp, samples=1:12)
+  dev.off()
+  cat("RNA composition plot generated\n")
+  #Are the samples comparable?
+ 
+}
+#############################
+## PCA Analysis with NOISeq
+##########################################
+{
+  pca.dat <- dat(mydata, type = "PCA", logtransf = F)
+  pca.results <- pca.dat@dat$result
+  
+  ## Variance explained by each component
+  png(file=paste(PLOTSDIR, "PCAVariance_raw.png", sep="/"),
+      width = w, height = h, pointsize = p)
+  barplot(pca.results$var.exp[,1], xlab = "PC", ylab = "Explained variance")
+  dev.off()
+  cat("PCA variance raw plot generated.\n")
+  
+  ## Loading plot
+  png(file=paste(PLOTSDIR, "PCALoading_raw.png", sep="/"), 
+      width = w, height = h, pointsize = p)
+  plot(pca.results$loadings[,1:2], col = 1, pch = 20, cex = 0.5,
+       xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
+       ylab = paste("PC 2 ", round(pca.results$var.exp[2,1]*100,0), "%", sep = ""),
+       main = "PCA loadings",
+       xlim = range(pca.results$loadings[,1:2]) + 0.02*diff(range(pca.results$loadings[,1:2]))*c(-1,1),
+       ylim = range(pca.results$loadings[,1:2]) + 0.02*diff(range(pca.results$loadings[,1:2]))*c(-1,1))  
+  dev.off()
+  cat("PCA loading raw plot generated.\n")
+  
+  ## Score plot
+  mycol <- as.character(full$targets$group)
+  mycol[mycol == 'N'] <- "black"
+  mycol[mycol == 'C'] <- "red2"
+  
+  png(file=paste(PLOTSDIR, "PCAScore_raw.png", sep="/"), 
+      width = w, height = h, pointsize = p)
+  par(mfrow = c(1,2))
+  
+  # PC1 & PC2
+  rango <- diff(range(pca.results$scores[,1:2]))
+  plot(pca.results$scores[,1:2], col = "white",
+       xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
+       ylab = paste("PC 2 ", round(pca.results$var.exp[2,1]*100,0), "%", sep = ""),
+     main = "PCA scores",
+     xlim = range(pca.results$scores[,1:2]) + 0.02*rango*c(-1,1),
+     ylim = range(pca.results$scores[,1:2]) + 0.02*rango*c(-1,1))
+  points(pca.results$scores[,1], pca.results$scores[,2], col = mycol, cex = 1.5)  
+  legend("topright", c("normal", "cancer"), col = c("black", "red2"), ncol = 2, pch = 1)
+  
+  # PC1 & PC3
+  rango2 = diff(range(pca.results$scores[,c(1,3)]))
+  plot(pca.results$scores[,c(1,3)], col = "white",
+     xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
+     ylab = paste("PC 3 ", round(pca.results$var.exp[3,1]*100,0), "%", sep = ""),
+     main = "PCA scores",
+     xlim = range(pca.results$scores[,c(1,3)]) + 0.02*rango2*c(-1,1),
+     ylim = range(pca.results$scores[,c(1,3)]) + 0.02*rango2*c(-1,1))
+  points(pca.results$scores[,1], pca.results$scores[,3], col = mycol, cex = 1.5)
+  legend("topright", c("normal", "cancer"), col = c("black", "red2"), ncol = 2, pch = 1)
+  dev.off()
+  cat("PCA scores raw plot generated.\n")
+}

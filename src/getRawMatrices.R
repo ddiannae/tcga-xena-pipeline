@@ -175,6 +175,8 @@ dir.create(RDATADIR)
   M <- normal_samples$matrix %>% inner_join(cancer_samples$matrix, by = "gene_id")
   cat('Total number of features and samples: ', paste(dim(M), collapse=" ,"), '\n')
   
+  normal_samples$targets$group <- "normal"
+  cancer_samples$targets$group <- "cancer"
   ## Samples
   targets <- bind_rows(normal_samples$targets, cancer_samples$targets)
   
@@ -192,6 +194,13 @@ dir.create(RDATADIR)
   
   no_gc <- sum(is.na(annot$percentage_gc_content))
   cat("There are",no_gc, "entries with no GC info \n")
+  
+  ids <- annot %>% filter(!is.na(gc) & !is.na(width)) %>%
+    select(gene_id) %>% unlist(use.names = F)
+  
+  M <- M %>% filter(gene_id %in% ids)
+  annot <- annot %>% filter(gene_id %in% ids)
+  cat("Non GC and lenght annotated genes removed.\n")
   
   ##Save clean data
   cat('Saving raw full data \n')

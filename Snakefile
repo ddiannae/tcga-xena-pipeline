@@ -3,13 +3,12 @@
 ## Tissue type just like in GDC, lowercase is fine
 #TISSUES = ["prostate", "pancreas", "bladder", "skin", "brain", "liver", "esophagus", "breast", "lung", "kidney", "colorectal", "uterus", "thyroid"]
 TISSUES = ["esophagus"]
-DATADIR ="~/Workspace/regulaciontrans-data"
+DATADIR ="/home/diana/Workspace/regulaciontrans-data"
 FIGDIR = "figures"
 files = [] 
 for t in TISSUES:
-  files.append(DATADIR+ "/" + t + "/" + t + "-matrix.tsv")
-  files.append(DATADIR+ "/" + t + "/" + t + "-samples.tsv")
-  files.append(DATADIR+ "/" + t + "/rdata/raw_full.RData")
+  ## Example: data/breast/manifests/breast-cancer-rna_counts.txt"
+    files.append(DATADIR+ "/" + t + "/plots/PCAScore_raw.png")
 
 rule all:
   input:
@@ -26,6 +25,14 @@ rule all:
 #    Rscript src/getHeatmap.R {wildcards.tissue} {biomart} {input} {FIGDIR}/{wildcards.tissue}
 #    """
 #
+rule qc:
+  input:
+    DATADIR+"/{tissue}/rdata/raw_full.RData"
+  output:
+    DATADIR+"/{tissue}/plots/PCAScore_raw.png"
+  shell:
+    "Rscript src/QC.R {wildcards.tissue} {DATADIR}"
+    
 ## We need to run these two together because the output of the download_files
 ## tasks depends on the manifest and there is no easy way to specify this on 
 ## snakemake
