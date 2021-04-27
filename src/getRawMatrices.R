@@ -202,9 +202,20 @@ dir.create(RDATADIR)
   annot <- annot %>% filter(gene_id %in% ids)
   cat("Non GC and lenght annotated genes removed.\n")
   
+  rownames(annot) <- annot$gene_id
+  
+  ## Save it as a matrix
+  ids <- M$gene_id
+  MM <- M %>% select(-gene_id) %>% as.matrix() 
+  rownames(MM) <- ids
+  MM <- MM[,targets$id]
+  
+  ## Make sure they are factors
+  targets$group <- factor(targets$group, levels=c("cancer", "normal"))
+  rownames(targets) <- targets$id
   ##Save clean data
   cat('Saving raw full data \n')
-  full <- list(M = M, annot = annot, targets = targets)
+  full <- list(M = MM, annot = annot, targets = targets)
   
   save(full, file=paste(RDATADIR, "raw_full.RData", sep="/"), compress="xz")
   write_tsv(M, paste0(DATADIR, "/", TISSUE, "-matrix.tsv"))

@@ -48,12 +48,6 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
 ##########################################
 {
   ## Reading data into NOISeq package -> mydata
-  rownames(full$annot) <- full$annot$gene_id
-  ids <- full$M$gene_id
-  full$M <- full$M %>% select(-gene_id) %>% as.matrix() 
-  rownames(full$M) <- ids
-  full$M <- full$M[,full$targets$id]
-  
   mydata <- NOISeq::readData(
     data = full$M, 
     length = full$annot %>% select(gene_id, width), 

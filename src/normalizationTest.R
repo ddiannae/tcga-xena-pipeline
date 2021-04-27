@@ -50,11 +50,6 @@ p <- 24
 load(file=paste(RDATA, "raw_full.RData", sep="/"))
 { 
   ### We keep only genes with mean expression count > 10 
-  ids <- full$M$gene_id
-  full$M <- full$M %>% select(-gene_id) %>% as.matrix() 
-  rownames(full$M) <- ids
-  rownames(full$annot) <- full$annot$gene_id
-  
   exp_genes <- apply(full$M, 1, function(x) mean(x)>10)
   egtable <- table(exp_genes)
   cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
@@ -88,7 +83,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   #lenght_norm <- c("full", "loess", "median", "upper")
   #gc_norm <- c( "full", "loess", "median", "upper")
   #between_nom <- c("full", "median", "tmm", "upper")
-  normalization_results <- data.frame()
+  #normalization_results <- data.frame()
   
   ## This function gets the relevant statistics for the regression methods for GC and Length bias
   getRegressionStatistics <- function(regressionmodel) {
@@ -171,7 +166,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
                                     "rna_passed_samples", "rna_passed_proportion")
     return(norm_set_results)
   } 
-  
+  df_normalizations <- expand.grid(gcn = gc_norm, ln = lenght_norm, bn = between_nom)
   ## We try with GC normalization first
   for (gcn in gc_norm) {
     gcn_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$gc, which = gcn)
