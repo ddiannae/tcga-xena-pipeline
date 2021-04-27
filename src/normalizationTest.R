@@ -29,8 +29,14 @@ library(DESeq2)
 library(cqn)
 
 ###############################################################################
-TISSUE <- "esophagus"
-DATADIR <- "/home/diana/Workspace/regulaciontrans-data/"
+args <- commandArgs(trailingOnly = T)
+
+if (length(args) < 2 ) {
+  stop("Incorrect number of arguments", call.=FALSE)
+} else {
+  TISSUE = args[1]
+  DATADIR = args[2]
+}
 DATADIR <- paste(DATADIR, TISSUE, sep="/")
 RDATA <- paste(DATADIR, "rdata", sep="/")
 PLOTSDIR <-paste(DATADIR, "plots", sep="/")

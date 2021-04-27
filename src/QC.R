@@ -24,7 +24,7 @@
 ##############################################################################
 library(dplyr)
 library(NOISeq)
-
+library(ggplot2)
 args <- commandArgs(trailingOnly = T)
 
 if (length(args) < 2 ) {
@@ -179,8 +179,8 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   
   ## Score plot
   mycol <- as.character(full$targets$group)
-  mycol[mycol == 'N'] <- "black"
-  mycol[mycol == 'C'] <- "red2"
+  mycol[mycol == "normal"] <- "black"
+  mycol[mycol == "cancer"] <- "red2"
   
   png(file=paste(PLOTSDIR, "PCAScore_raw.png", sep="/"), 
       width = w, height = h, pointsize = p)
