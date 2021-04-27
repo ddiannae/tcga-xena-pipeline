@@ -9,6 +9,7 @@ files = []
 for t in TISSUES:
   ## Example: data/breast/manifests/breast-cancer-rna_counts.txt"
     files.append(DATADIR+ "/" + t + "/plots/PCAScore_raw.png")
+    files.append(DATADIR+ "/" + t + "/plots/normalization_plots.pdf")
 
 rule all:
   input:
@@ -25,6 +26,14 @@ rule all:
 #    Rscript src/getHeatmap.R {wildcards.tissue} {biomart} {input} {FIGDIR}/{wildcards.tissue}
 #    """
 #
+rule normalization_test:
+  input:
+    DATADIR+"/{tissue}/rdata/raw_full.RData"
+  output:
+    DATADIR+"/{tissue}/plots/normalization_plots.pdf"
+  shell:
+    "Rscript src/normalizationTest.R {wildcards.tissue} {DATADIR}"
+
 rule qc:
   input:
     DATADIR+"/{tissue}/rdata/raw_full.RData"

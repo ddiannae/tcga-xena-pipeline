@@ -112,6 +112,12 @@
       "Source": "Bioconductor",
       "Hash": "fbae799fc848a8599a46a3adfe8a975a"
     },
+    "NOISeq": {
+      "Package": "NOISeq",
+      "Version": "2.34.0",
+      "Source": "Bioconductor",
+      "Hash": "7639a493dc2b1cccd49beaf6109aa298"
+    },
     "R6": {
       "Package": "R6",
       "Version": "2.5.0",
@@ -179,10 +185,10 @@
     },
     "bitops": {
       "Package": "bitops",
-      "Version": "1.0-6",
+      "Version": "1.0-7",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "0b118d5900596bae6c4d4865374536a6"
+      "Hash": "b7d8d8ee39869c18d8846a184dd8a1af"
     },
     "cli": {
       "Package": "cli",
