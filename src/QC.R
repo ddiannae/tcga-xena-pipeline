@@ -1,35 +1,27 @@
-##############################################################################
-## CHROMATIN AND GENE REGULATION: FROM GENE TO GENOME FOLDING
-## Practical session: In silico analysis of RNA-Seq data.
 ###############################################################################
-## Data preparation: 
-##      -Quality Control
-## Author: 
-##          Dr. Cristobal Fresno - cristobalfresno@gmail.com
-## Date: 2016-12-12
+##  LOSS OF LONG RANGE CO-EXPRESSION IN CANCER
+##  Analysis of RNA-Seq data.
+###############################################################################
+## Diana Garcia - diana.gco@gmail.com
+## Date: April, 2021
+## 
+## Original code. Dr. Cristobal Fresno - cristobalfresno@gmail.com
+## Date:  2016-12-12
 ###############################################################################
 ## Quality Control 
-##      -Let's keep only the GC & length annotated genes
-##      -EXPLORATORY ANALYSIS (NOISeq package)
-##          -Reading data into NOISeq package -> mydata
-##          -Plots
-##              -Biodetection plot
-##              -Count distribution per biotype
-##              -Saturation plot
-##              -Count distribution per sample
-##              -Count distribution per Experimental factors
-##          -Bias
-##              -Length bias detection
-##              -GC bias
-##              -RNA composition
-##          -Quality Control Report 
-##     -Basal situation
-##          GC content bias: Detected
-##         Gene Length bias: Detected
-##         RNA content bias: Detected
-##      -PCA
+##    -EXPLORATORY ANALYSIS (NOISeq package)
+##    -Reading data into NOISeq package -> mydata
+##    -Plots
+##        -Biodetection plot
+##        -Count distribution per biotype
+##        -Count distribution per sample
+##        -Count distribution per Experimental factors
+##    -Bias
+##        -Length bias detection
+##        -GC bias
+##        -RNA composition
+##    -PCA
 ##############################################################################
-
 library(dplyr)
 library(NOISeq)
 
@@ -83,7 +75,6 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   dev.off()
   cat("Biodetection plots generated\n")
   
-
   ## Count distribution per biotype. Using count per million, only for one sample
   mycountsbio <- dat(mydata, factor = NULL, type = "countsbio")
   png(filename=paste(PLOTSDIR, "countsbio.png", sep="/"), width=w, height=h, pointsize=p)
@@ -142,15 +133,15 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   explo.plot(mylengthbias, samples = NULL, toplot = "global")
   dev.off()
   cat("Lenght bias plot generated\n")
-  #Do we see a clear pattern?
+  # Do we see a clear pattern?
 
-  ##GC bias
+  ## GC bias
   mygcbias <- dat(mydata, factor = "group", type="GCbias")
   png(paste(PLOTSDIR, "gcbias.png", sep="/"), width=w, height=h, pointsize=p)
   explo.plot(mygcbias, samples = NULL, toplot = "global")
   dev.off()
   cat("GC bias plot generated\n")
-  #Do we see a clear pattern?
+  # Do we see a clear pattern?
 
   ## RNA composition
   mycomp <- dat(mydata, type="cd")
@@ -158,8 +149,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   explo.plot(mycomp, samples=1:12)
   dev.off()
   cat("RNA composition plot generated\n")
-  #Are the samples comparable?
- 
+  # Are samples comparable?
 }
 #############################
 ## PCA Analysis with NOISeq
