@@ -21,6 +21,7 @@ library(reshape2)
 library(grid)
 library(png)
 library(gridExtra)
+library(parallel)
 library(readr)
 library(dplyr)
 library(NOISeq)
@@ -76,8 +77,8 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
       conditions=mean10$targets$group,
       row.names=colnames(mean10$M)))
   
-  lenght_norm <- c("full")
-  gc_norm <- c( "full" )
+  lenght_norm <- c("full", "loess")
+  gc_norm <- c( "full", "loess")
   between_nom <- c("full")
   
   #lenght_norm <- c("full", "loess", "median", "upper")
@@ -166,45 +167,56 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
                                     "rna_passed_samples", "rna_passed_proportion")
     return(norm_set_results)
   } 
-  df_normalizations <- expand.grid(gcn = gc_norm, ln = lenght_norm, bn = between_nom)
-  ## We try with GC normalization first
-  for (gcn in gc_norm) {
-    gcn_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$gc, which = gcn)
-    for (ln in lenght_norm) {
-      ln_data <- withinLaneNormalization(gcn_data, mean10$annot$width, which = ln)
-      for (bn in between_nom) {
-        if (bn == "tmm") {
-          between_data <- tmm(ln_data, long = 1000, lc = 0, k = 0)
-        } else {
-          between_data <- betweenLaneNormalization(ln_data, which = bn, offset = FALSE)
-        }
-        cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
-        norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
-                                                between_data, mean10)
-        normalization_results <- bind_rows(normalization_results, norm_noiseq_results)                      
-      }
-    }
-  }
   
-  ## We try with length normalization now
-  for (ln in lenght_norm) {
-    ln_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$width, which = ln)
-    for (gcn in gc_norm) {
-      gcn_data <- withinLaneNormalization(ln_data, mean10$annot$gc, which = gcn)
-      for (bn in between_nom) {
-        if (bn == "tmm") {
-          between_data <- tmm(gcn_data, long = 1000, lc = 0, k = 0)
-        } else {
-          between_data <- betweenLaneNormalization(gcn_data, which = bn, offset = FALSE)
-        }
-        cat("Testing with length normalization: ", ln, ", GC normalization: ", gcn, " and between lanes normalization: ", bn, "\n")
-        norm_noiseq_results <- getNOISeqResults(paste("length", ln, sep = "_"), paste("GC", gcn, sep = "_"), paste("between", bn, sep =  "_"),
-                                                between_data, mean10)
-        normalization_results <- bind_rows(normalization_results, norm_noiseq_results)                      
-      }
-    }
-  }
+  df_normalizations <-expand.grid(gcn = gc_norm, ln = lenght_norm, 
+                                  bn = between_nom, stringsAsFactors = F)
+  
+  cat("Texting all ", nrow(df_normalizations), "normalization combinations")
+  all_norms <- mclapply(X = 1:nrow(df_normalizations), 
+                              mc.cores = 4,
+                              FUN = function(i){
+    gcn <- df_normalizations[i, "gcn"]
+    ln <- df_normalizations[i, "ln"]
+    bn <- df_normalizations[i, "bn"]
+    gcn_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$gc, which = gcn)
+    ln_data <- withinLaneNormalization(gcn_data, mean10$annot$width, which = ln)
+        
+     if (bn == "tmm") {
+       between_data <- tmm(ln_data, long = 1000, lc = 0, k = 0)
+     } else {
+       between_data <- betweenLaneNormalization(ln_data, which = bn, offset = FALSE)
+     }
+     cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
+     norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
+                                                       between_data, mean10)
+     return(norm_noiseq_results)                      
 
+  })
+  
+  normalization_results <- bind_rows(all_norms)
+  all_norms <- mclapply(X = 1:nrow(df_normalizations), 
+                        mc.cores = 5,
+                        FUN = function(i){
+          gcn <- df_normalizations[i, "gcn"]
+          ln <- df_normalizations[i, "ln"]
+          bn <- df_normalizations[i, "bn"]
+          ln_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$width, which = ln)
+          gcn_data <- withinLaneNormalization(ln_data, mean10$annot$gc, which = gcn)
+          
+          if (bn == "tmm") {
+            between_data <- tmm(ln_data, long = 1000, lc = 0, k = 0)
+          } else {
+            between_data <- betweenLaneNormalization(ln_data, which = bn, offset = FALSE)
+          }
+          cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
+          norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
+                                                  between_data, mean10)
+          return(norm_noiseq_results)                      
+          
+  })
+  
+  normalization_results <- bind_rows(normalization_results, all_norms)
+  
   ## Finally, we test with cqn
   ##Length, GC content and size correction
   cat("Testing with cqn normalization\n")
