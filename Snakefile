@@ -1,15 +1,18 @@
 ## Snakefile for ASCAT2 files from GDC
 ##
 ## Tissue type just like in GDC, lowercase is fine
-#TISSUES = ["prostate", "pancreas", "bladder", "skin", "brain", "liver", "esophagus", "breast", "lung", "kidney", "colorectal", "uterus", "thyroid"]
-TISSUES = ["esophagus"]
-DATADIR ="/home/diana/Workspace/regulaciontrans-data"
-FIGDIR = "figures"
+### DONE = [
+#DONE = ["prostate", "pancreas", "bladder", "skin",  "liver", "esophagus", "colorectal", "uterus"]
+#TISSUES = ["prostate", "pancreas", "bladder", "skin", "brain", "liver", "esophagus",  "lung", "kidney", "colorectal", "uterus", "thyroid"]
+TISSUES = [ "lung"]
+DATADIR ="/datos/ot/diana/regulacion-trans"
+# Adjust the number of cores according to the machine and number of tissues
+MCCORES = 25
 files = [] 
 for t in TISSUES:
-  ## Example: data/breast/manifests/breast-cancer-rna_counts.txt"
-    files.append(DATADIR+ "/" + t + "/plots/PCAScore_raw.png")
-    files.append(DATADIR+ "/" + t + "/plots/normalization_plots.pdf")
+  			## Example: data/breast/manifests/breast-cancer-rna_counts.txt"
+  #files.append(DATADIR+ "/" + t + "/plots/normalization_plots.pdf")
+ files.append(DATADIR+ "/" + t + "/rdata/normalization_results.tsv")
 
 rule all:
   input:
@@ -25,14 +28,22 @@ rule all:
 #    mkdir -p {FIGDIR}/{wildcards.tissue}
 #    Rscript src/getHeatmap.R {wildcards.tissue} {biomart} {input} {FIGDIR}/{wildcards.tissue}
 #    """
-#
+# 
+rule normalization_plots:
+  input:
+    DATADIR+"/{tissue}/rdata/normalization_results.tsv"
+  output:
+    DATADIR+"/{tissue}/plots/normalization_plots.pdf"
+  shell:
+    "Rscript src/normalizationPlots.R {wildcards.tissue} {DATADIR} {MCCORES}" 
+
 rule normalization_test:
   input:
     DATADIR+"/{tissue}/rdata/raw_full.RData"
   output:
-    DATADIR+"/{tissue}/plots/normalization_plots.pdf"
+    DATADIR+"/{tissue}/rdata/normalization_results.tsv"
   shell:
-    "Rscript src/normalizationTest.R {wildcards.tissue} {DATADIR}"
+    "Rscript src/normalizationTest.R {wildcards.tissue} {DATADIR} {MCCORES} > {DATADIR}/{wildcards.tissue}/normalization_test.log"
 
 rule qc:
   input:

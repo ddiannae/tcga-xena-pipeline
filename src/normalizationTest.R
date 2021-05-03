@@ -14,7 +14,7 @@
 ##      Within lane. For lenght: RPKM, loess, full
 ##      Within lane. For GC content: loess, full
 ##      Between lanes. TMM, full
-##  - Integrate results in one pdf
+##  - Generate plots
 ###############################################################################
 library(ggplot2)
 library(reshape2)
@@ -37,6 +37,7 @@ if (length(args) < 2 ) {
 } else {
   TISSUE = args[1]
   DATADIR = args[2]
+  MCCORES = args[3]
 }
 DATADIR <- paste(DATADIR, TISSUE, sep="/")
 RDATA <- paste(DATADIR, "rdata", sep="/")
@@ -62,7 +63,8 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   cat("Filtering protein coding features \n")
   protein_coding <- rownames(mean10$annot[mean10$annot$gene_type == "protein_coding", ])
   cat("There are ", length(protein_coding), " features with type: protein_coding \n")
-  mean10 <- list(M = mean10$M[protein_coding, ], annot=mean10$annot[protein_coding, ], targets=mean10$targets)
+  mean10 <- list(M = mean10$M[protein_coding, rownames(mean10$targets)], 
+                 annot = mean10$annot[protein_coding, ], targets = mean10$targets)
   
   cat("Saving mean10_ProteinCoding.RData \n") 
   save(mean10, file=paste(RDATA, "mean10_proteinCoding.RData", sep="/"), compress="xz")
@@ -77,15 +79,10 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
       conditions=mean10$targets$group,
       row.names=colnames(mean10$M)))
   
-  lenght_norm <- c("full", "loess")
-  gc_norm <- c( "full", "loess")
-  between_nom <- c("full")
-  
-  #lenght_norm <- c("full", "loess", "median", "upper")
-  #gc_norm <- c( "full", "loess", "median", "upper")
-  #between_nom <- c("full", "median", "tmm", "upper")
-  #normalization_results <- data.frame()
-  
+  lenght_norm <- c("full", "loess", "median", "upper")
+  gc_norm <- c( "full", "loess", "median", "upper")
+  between_nom <- c("full", "median", "tmm", "upper")
+
   ## This function gets the relevant statistics for the regression methods for GC and Length bias
   getRegressionStatistics <- function(regressionmodel) {
     name <- names(regressionmodel)
@@ -105,7 +102,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
       length = m10_data$annot %>% select(gene_id, width), 
       biotype = m10_data$annot %>% select(gene_id, gene_type), 
       chromosome = m10_data$annot %>% select(chr, start, end), 
-      factors = m10_data$target %>% select(group),
+      factors = m10_data$targets %>% select(group),
       gc = m10_data$annot %>% select(gene_id, gc))
 
     nsamples <- dim(m10_data$targets)[1]
@@ -124,10 +121,12 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
     myrnacomp <- dat(mydata, norm = TRUE, type="cd")
     dtable <- table(myrnacomp@dat$DiagnosticTest[,  "Diagnostic Test"])
     if (is.na(dtable["PASSED"])) dtable <- data.frame(PASSED = 0)
-    
-    pngPlots <- c(paste(PLOTSNORMDIR, "lenght_bias.png", sep="/"), 
-                  paste(PLOTSNORMDIR, "gc_bias.png", sep="/"), 
-                  paste(PLOTSNORMDIR, "rna_composition.png", sep="/"))
+  
+    cat("Step1:", step1, ", step2:", step2, " step3: ", step3, " calculations done\n")
+    plotname <- paste(step1, step2, step3, sep = "_")  
+    pngPlots <- c(paste0(PLOTSNORMDIR, "/", plotname, "_lenght_bias.png"), 
+                  paste0(PLOTSNORMDIR, "/", plotname, "_gc_bias.png"), 
+                  paste0(PLOTSNORMDIR, "/", plotname, "_rna_composition.png"))
     
     png(pngPlots[1], width=w/2, height=h/2)
     explo.plot(mylengthbias, samples = NULL, toplot = "global")
@@ -140,25 +139,12 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
     png(pngPlots[3],width=w/2, height=h/2)
     explo.plot(myrnacomp, samples = 1:12)
     dev.off()
-    
-    thePlots <- lapply (pngPlots, function(pngFile) {
-      rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
-    })
-    
-    plotname <- paste(step1, step2, step3, sep = "_")
-    png(paste(PLOTSNORMDIR, paste(plotname, "png", sep ="."), sep="/"),  height=h/2, width=w*(3/2))
-    par(oma = c(0, 0, 1.5, 0))
-    plot.new()
-    do.call(grid.arrange, c(thePlots,  ncol = 3, nrow=1))
-    mtext(plotname, outer = TRUE, cex = 1.5)
-    dev.off()
-    
-    unlink(pngPlots)
-    
+    cat("Step1:", step1, ", step2:", step2, " step3: ", step3, " plots saved\n")
     norm_set_results <- data.frame(step1, step2, step3, 
                                    l_stats_1$r2, l_stats_1$p, l_stats_2$r2, l_stats_2$p,
                                    gc_stats_1$r2, gc_stats_1$p, gc_stats_2$r2, gc_stats_2$p, 
                                    dtable["PASSED"], dtable["PASSED"]/nsamples)
+    
     colnames(norm_set_results) <- c("step1", "step2", "step3", 
                                     paste("lenght", l_stats_1$name, "R2", sep = "_"), paste("lenght", l_stats_1$name, "p-value", sep = "_"),  
                                     paste("lenght", l_stats_2$name, "R2", sep = "_"), paste("lenght", l_stats_2$name, "p-value", sep = "_"), 
@@ -168,13 +154,15 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
     return(norm_set_results)
   } 
   
-  df_normalizations <-expand.grid(gcn = gc_norm, ln = lenght_norm, 
+  df_normalizations <- expand.grid(gcn = gc_norm, ln = lenght_norm, 
                                   bn = between_nom, stringsAsFactors = F)
   
-  cat("Texting all ", nrow(df_normalizations), "normalization combinations")
-  all_norms <- mclapply(X = 1:nrow(df_normalizations), 
-                              mc.cores = 4,
-                              FUN = function(i){
+  cat("Testing all ", nrow(df_normalizations), "normalization combinations\n")
+  
+  ## Normalizations with GC step first
+  gc_norms <- mclapply(X = 1:nrow(df_normalizations), 
+                        mc.cores = MCCORES, 
+                        FUN = function(i){
     gcn <- df_normalizations[i, "gcn"]
     ln <- df_normalizations[i, "ln"]
     bn <- df_normalizations[i, "bn"]
@@ -189,13 +177,14 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
      cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
      norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
                                                        between_data, mean10)
-     return(norm_noiseq_results)                      
-
+     return(norm_noiseq_results)
   })
   
-  normalization_results <- bind_rows(all_norms)
-  all_norms <- mclapply(X = 1:nrow(df_normalizations), 
-                        mc.cores = 5,
+  save(gc_norms, file=paste(RDATA, "gc_norms.RData", sep="/"), compress="xz")
+  
+  ## Normalizations with Length step first
+  ln_norms <- mclapply(X = 1:nrow(df_normalizations), 
+                        mc.cores = MCCORES,
                         FUN = function(i){
           gcn <- df_normalizations[i, "gcn"]
           ln <- df_normalizations[i, "ln"]
@@ -209,16 +198,18 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
             between_data <- betweenLaneNormalization(ln_data, which = bn, offset = FALSE)
           }
           cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
-          norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
+          norm_noiseq_results <- getNOISeqResults(paste("length", ln, sep = "_"), paste("gc", gcn, sep = "_"), paste("between", bn, sep =  "_"), 
                                                   between_data, mean10)
-          return(norm_noiseq_results)                      
-          
+          return(norm_noiseq_results)                                         
   })
   
-  normalization_results <- bind_rows(normalization_results, all_norms)
+  save(ln_norms, file=paste(RDATA, "ln_norms.RData", sep="/"), compress="xz")
   
+  gc_norms <- bind_rows(gc_norms)
+  ln_norms <- bind_rows(ln_norms)
+  normalization_results <- bind_rows(gc_norms, ln_norms)
+ 
   ## Finally, we test with cqn
-  ##Length, GC content and size correction
   cat("Testing with cqn normalization\n")
   y_DESeq <- DESeqDataSetFromMatrix(countData=mean10$M, 
                                   colData=mean10$targets, design= ~group)
@@ -230,17 +221,8 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   norm_noiseq_results <- getNOISeqResults("gc_cqn", "length_cqn", "between_cqn", normalized_cqn, mean10)
   
   normalization_results <- bind_rows(normalization_results, norm_noiseq_results)
-  pngPlots <- list.files(path = PLOTSNORMDIR, pattern = "*.png", full.names = TRUE)
-  
-  thePlots <- lapply (pngPlots, function(pngFile) {
-    rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
-  })
-  
-  pdf(paste(PLOTSDIR, "normalization_plots.pdf", sep="/"), title="Normalization Plots")
-  print(marrangeGrob(thePlots, nrow = 3, ncol = 1, top = NULL))
-  dev.off()
-  
-  cat("End of normalization texting\n")
-  cat("Saving NormalizationResults.tsv\n") 
+ 
+  cat("End of normalization testing\n")
+  cat("Saving normalization_results.tsv\n") 
   write_tsv(normalization_results, paste(RDATA, "normalization_results.tsv", sep="/"))
 }
