@@ -11,7 +11,7 @@
 ##  Integrate normalization plots. No done with the normalizationTest script 
 ##  because it causes problems with parallelization
 ##  - Normalization combinations:
-##      Within lane. For lenght: RPKM, loess, full
+##      Within lane. For length: RPKM, loess, full
 ##      Within lane. For GC content: loess, full
 ##      Between lanes. TMM, full
 ##  - Integrate plots per normalization type in one png
@@ -46,16 +46,16 @@ p <- 24
 { 
   cat("Integrating plots \n.")
   
-  lenght_norm <- c("full", "loess", "median", "upper")
+  length_norm <- c("full", "loess", "median", "upper")
   gc_norm <- c( "full", "loess", "median", "upper")
-  between_nom <- c("full", "median", "tmm", "upper")
+  between_norm <- c("full", "median", "tmm", "upper")
   
   ## This function will retrieve plots for one normalization set and will create 
   ## one single plot
   savePlots <- function(step1, step2, step3) {
    
     plotname <- paste(step1, step2, step3, sep = "_")  
-    pngPlots <- c(paste0(PLOTSNORMDIR, "/", plotname, "_lenght_bias.png"), 
+    pngPlots <- c(paste0(PLOTSNORMDIR, "/", plotname, "_length_bias.png"), 
                   paste0(PLOTSNORMDIR, "/", plotname, "_gc_bias.png"), 
                   paste0(PLOTSNORMDIR, "/", plotname, "_rna_composition.png"))
     
@@ -73,8 +73,8 @@ p <- 24
     unlink(pngPlots)
   } 
   
-  df_normalizations <- expand.grid(gcn = gc_norm, ln = lenght_norm, 
-                                   bn = between_nom, stringsAsFactors = F)
+  df_normalizations <- expand.grid(gcn = gc_norm, ln = length_norm, 
+                                   bn = between_norm, stringsAsFactors = F)
   
   cat("Getting plots for all ", nrow(df_normalizations), "normalization combinations.\n")
 

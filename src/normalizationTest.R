@@ -9,9 +9,8 @@
 ## Date:  2016-12-12
 ###############################################################################
 ## Data Normalization
-##  - Filter genes with median expression count under 10
 ##  - Try Normalization combinations:
-##      Within lane. For lenght: RPKM, loess, full
+##      Within lane. For length: RPKM, loess, full
 ##      Within lane. For GC content: loess, full
 ##      Between lanes. TMM, full
 ##  - Generate plots
@@ -32,7 +31,7 @@ library(cqn)
 ###############################################################################
 args <- commandArgs(trailingOnly = T)
 
-if (length(args) < 2 ) {
+if (length(args) < 3 ) {
   stop("Incorrect number of arguments", call.=FALSE)
 } else {
   TISSUE = args[1]
@@ -48,28 +47,6 @@ w <- 1024
 h <- 1024
 p <- 24
 
-##########################################################################
-load(file=paste(RDATA, "raw_full.RData", sep="/"))
-{ 
-  ### We keep only genes with mean expression count > 10 
-  exp_genes <- apply(full$M, 1, function(x) mean(x)>10)
-  egtable <- table(exp_genes)
-  cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
-  
-  ##Filtering low expression genes
-  mean10 <- list(M = full$M[exp_genes, ], annot=full$annot[exp_genes, ], targets=full$targets)
-  rownames(mean10$annot) <- rownames(mean10$M)
-  
-  cat("Filtering protein coding features \n")
-  protein_coding <- rownames(mean10$annot[mean10$annot$gene_type == "protein_coding", ])
-  cat("There are ", length(protein_coding), " features with type: protein_coding \n")
-  mean10 <- list(M = mean10$M[protein_coding, rownames(mean10$targets)], 
-                 annot = mean10$annot[protein_coding, ], targets = mean10$targets)
-  
-  cat("Saving mean10_ProteinCoding.RData \n") 
-  save(mean10, file=paste(RDATA, "mean10_proteinCoding.RData", sep="/"), compress="xz")
-}
- ###########################################################################
 { 
   cat("Testing normalization methods\n.")
   mydataM10EDA <- EDASeq::newSeqExpressionSet(
@@ -79,15 +56,14 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
       conditions=mean10$targets$group,
       row.names=colnames(mean10$M)))
   
-  lenght_norm <- c("full", "loess", "median", "upper")
-  gc_norm <- c( "full", "loess", "median", "upper")
-  between_nom <- c("full", "median", "tmm", "upper")
-
+  length_norm <- c("full", "loess", "median", "upper")
+  gc_norm <- c("full", "loess", "median", "upper")
+  between_norm <-c("full", "median", "tmm", "upper")
+  
   ## This function gets the relevant statistics for the regression methods for GC and Length bias
   getRegressionStatistics <- function(regressionmodel) {
     name <- names(regressionmodel)
     rsquared <- summary(regressionmodel[[1]])$r.squared
-    print(rsquared)
     fstatistic <- summary(regressionmodel[[1]])$fstatistic
     pvalue <- signif(pf(q = fstatistic[1], df1 = fstatistic[2], 
                         df2 = fstatistic[3], lower.tail = FALSE), 2)
@@ -99,7 +75,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
     ### Check the NOISEq results 
     mydata <- NOISeq::readData(
       data = n_counts, 
-      length = m10_data$annot %>% select(gene_id, width), 
+      length = m10_data$annot %>% select(gene_id, length), 
       biotype = m10_data$annot %>% select(gene_id, gene_type), 
       chromosome = m10_data$annot %>% select(chr, start, end), 
       factors = m10_data$targets %>% select(group),
@@ -124,7 +100,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   
     cat("Step1:", step1, ", step2:", step2, " step3: ", step3, " calculations done\n")
     plotname <- paste(step1, step2, step3, sep = "_")  
-    pngPlots <- c(paste0(PLOTSNORMDIR, "/", plotname, "_lenght_bias.png"), 
+    pngPlots <- c(paste0(PLOTSNORMDIR, "/", plotname, "_length_bias.png"), 
                   paste0(PLOTSNORMDIR, "/", plotname, "_gc_bias.png"), 
                   paste0(PLOTSNORMDIR, "/", plotname, "_rna_composition.png"))
     
@@ -139,23 +115,25 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
     png(pngPlots[3],width=w/2, height=h/2)
     explo.plot(myrnacomp, samples = 1:12)
     dev.off()
+    
     cat("Step1:", step1, ", step2:", step2, " step3: ", step3, " plots saved\n")
+    
     norm_set_results <- data.frame(step1, step2, step3, 
                                    l_stats_1$r2, l_stats_1$p, l_stats_2$r2, l_stats_2$p,
                                    gc_stats_1$r2, gc_stats_1$p, gc_stats_2$r2, gc_stats_2$p, 
                                    dtable["PASSED"], dtable["PASSED"]/nsamples)
     
     colnames(norm_set_results) <- c("step1", "step2", "step3", 
-                                    paste("lenght", l_stats_1$name, "R2", sep = "_"), paste("lenght", l_stats_1$name, "p-value", sep = "_"),  
-                                    paste("lenght", l_stats_2$name, "R2", sep = "_"), paste("lenght", l_stats_2$name, "p-value", sep = "_"), 
+                                    paste("length", l_stats_1$name, "R2", sep = "_"), paste("length", l_stats_1$name, "p-value", sep = "_"),  
+                                    paste("length", l_stats_2$name, "R2", sep = "_"), paste("length", l_stats_2$name, "p-value", sep = "_"), 
                                     paste("gc", gc_stats_1$name, "R2", sep = "_"), paste("gc", gc_stats_1$name, "p-value", sep = "_"), 
                                     paste("gc", gc_stats_2$name, "R2", sep = "_"), paste("gc", gc_stats_2$name, "p-value", sep = "_"),
                                     "rna_passed_samples", "rna_passed_proportion")
     return(norm_set_results)
   } 
   
-  df_normalizations <- expand.grid(gcn = gc_norm, ln = lenght_norm, 
-                                  bn = between_nom, stringsAsFactors = F)
+  df_normalizations <- expand.grid(gcn = gc_norm, ln = length_norm, 
+                                  bn = between_norm, stringsAsFactors = F)
   
   cat("Testing all ", nrow(df_normalizations), "normalization combinations\n")
   
@@ -167,7 +145,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
     ln <- df_normalizations[i, "ln"]
     bn <- df_normalizations[i, "bn"]
     gcn_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$gc, which = gcn)
-    ln_data <- withinLaneNormalization(gcn_data, mean10$annot$width, which = ln)
+    ln_data <- withinLaneNormalization(gcn_data, mean10$annot$length, which = ln)
         
      if (bn == "tmm") {
        between_data <- tmm(ln_data, long = 1000, lc = 0, k = 0)
@@ -181,6 +159,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   })
   
   save(gc_norms, file=paste(RDATA, "gc_norms.RData", sep="/"), compress="xz")
+  gc_norms <- bind_rows(gc_norms)
   
   ## Normalizations with Length step first
   ln_norms <- mclapply(X = 1:nrow(df_normalizations), 
@@ -189,7 +168,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
           gcn <- df_normalizations[i, "gcn"]
           ln <- df_normalizations[i, "ln"]
           bn <- df_normalizations[i, "bn"]
-          ln_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$width, which = ln)
+          ln_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$length, which = ln)
           gcn_data <- withinLaneNormalization(ln_data, mean10$annot$gc, which = gcn)
           
           if (bn == "tmm") {
@@ -204,9 +183,8 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   })
   
   save(ln_norms, file=paste(RDATA, "ln_norms.RData", sep="/"), compress="xz")
-  
-  gc_norms <- bind_rows(gc_norms)
   ln_norms <- bind_rows(ln_norms)
+  
   normalization_results <- bind_rows(gc_norms, ln_norms)
  
   ## Finally, we test with cqn
@@ -215,9 +193,10 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
                                   colData=mean10$targets, design= ~group)
   y_DESeq <- estimateSizeFactors(y_DESeq)
   
-  cqn_mean10<- cqn(mean10$M, lengths=mean10$annot$width,
+  cqn_mean10<- cqn(mean10$M, lengths=mean10$annot$length,
                    x = mean10$annot$gc, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
   normalized_cqn <- cqn_mean10$y + cqn_mean10$offset
+  
   norm_noiseq_results <- getNOISeqResults("gc_cqn", "length_cqn", "between_cqn", normalized_cqn, mean10)
   
   normalization_results <- bind_rows(normalization_results, norm_noiseq_results)
