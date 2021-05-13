@@ -50,7 +50,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   ## Reading data into NOISeq package -> mydata
   mydata <- NOISeq::readData(
     data = full$M, 
-    length = full$annot %>% select(gene_id, width), 
+    length = full$annot %>% select(gene_id, length), 
     biotype = full$annot %>% select(gene_id, gene_type), 
     chromosome = full$annot %>% select(chr, start, end), 
     factors = full$targets %>% select(group),
@@ -123,7 +123,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
 {
   ## Length bias detection
   mylengthbias <- dat(mydata, factor="group", type="lengthbias")
-  png(paste(PLOTSDIR, "lengthbias.png", sep="/"), width=w, height=h, pointsize=p)
+  png(paste(PLOTSDIR, "length_bias.png", sep="/"), width=w, height=h, pointsize=p)
   explo.plot(mylengthbias, samples = NULL, toplot = "global")
   dev.off()
   cat("Lenght bias plot generated\n")
@@ -131,7 +131,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
 
   ## GC bias
   mygcbias <- dat(mydata, factor = "group", type="GCbias")
-  png(paste(PLOTSDIR, "gcbias.png", sep="/"), width=w, height=h, pointsize=p)
+  png(paste(PLOTSDIR, "gc_bias.png", sep="/"), width=w, height=h, pointsize=p)
   explo.plot(mygcbias, samples = NULL, toplot = "global")
   dev.off()
   cat("GC bias plot generated\n")
@@ -139,7 +139,7 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
 
   ## RNA composition
   mycomp <- dat(mydata, type="cd")
-  png(paste(PLOTSDIR, "RNAComposition.png", sep="/"), width=w, height=h, pointsize=p)
+  png(paste(PLOTSDIR, "rna_composition.png", sep="/"), width=w, height=h, pointsize=p)
   explo.plot(mycomp, samples=1:12)
   dev.off()
   cat("RNA composition plot generated\n")
@@ -153,14 +153,14 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   pca.results <- pca.dat@dat$result
   
   ## Variance explained by each component
-  png(file=paste(PLOTSDIR, "PCAVariance_raw.png", sep="/"),
+  png(file=paste(PLOTSDIR, "pca_variance_raw.png", sep="/"),
       width = w, height = h, pointsize = p)
   barplot(pca.results$var.exp[,1], xlab = "PC", ylab = "Explained variance")
   dev.off()
   cat("PCA variance raw plot generated.\n")
   
   ## Loading plot
-  png(file=paste(PLOTSDIR, "PCALoading_raw.png", sep="/"), 
+  png(file=paste(PLOTSDIR, "pca_loading_raw.png", sep="/"), 
       width = w, height = h, pointsize = p)
   plot(pca.results$loadings[,1:2], col = 1, pch = 20, cex = 0.5,
        xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
@@ -176,8 +176,8 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   mycol[mycol == "normal"] <- "black"
   mycol[mycol == "cancer"] <- "red2"
   
-  png(file=paste(PLOTSDIR, "PCAScore_raw.png", sep="/"), 
-      width = w, height = h, pointsize = p)
+  png(file=paste(PLOTSDIR, "pca_score_raw.png", sep="/"), 
+      width = 2*w, height = h, pointsize = p)
   par(mfrow = c(1,2))
   
   # PC1 & PC2
