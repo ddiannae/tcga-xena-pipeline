@@ -68,7 +68,8 @@ dir.create(RDATADIR)
     ## Build targets matrix
     targets <- data.frame(id = paste(TISSUE, type, 1:length(files_to_read), sep = "_"), 
                           file = unlist(lapply(strsplit(files_to_read, "/"), "[[", 10)),
-                          file_id = unlist(lapply(strsplit(files_to_read, "/"), "[[", 9)))
+                          file_id = unlist(lapply(strsplit(files_to_read, "/"), "[[", 9)),
+                          group = type)
     
     ## Rename columns in counts matrix
     matrix <- bind_cols(lapply(all_files, function(x) dplyr::select(x, "raw_counts")))
@@ -124,10 +125,9 @@ dir.create(RDATADIR)
   ## Newest gencode file. April, 2021.
   annot_new <-  rtracklayer::import('input/gencode.v37.annotation.gtf.gz')
   annot_new <- as.data.frame(annot_new)
-  annot_new <- annot_new %>% dplyr::select(gene_id, seqnames, start, end, width, type, 
-                                      gene_type, gene_name) %>% 
+  annot_new <- annot_new %>% dplyr::select(gene_id, gene_name, type, gene_type) %>% 
     filter(type == "gene" & gene_type == "protein_coding")
-  
+
   annot_new <- annot_new %>% mutate(ensembl_id = unlist(lapply(strsplit(gene_id, "\\."), "[[", 1)))
   
   ## Keep genes that remain in the newest annotation file
@@ -149,9 +149,10 @@ dir.create(RDATADIR)
   ## Get only genes matching ensemblID and version
   biomart <- biomart %>% mutate(gene_id = paste(ensembl_id, version, sep="."))
   annot <- annot %>%
-    inner_join(biomart %>% dplyr::select(-ensembl_id, -version), by = "gene_id")
+    inner_join(biomart %>% dplyr::select(gene_id, gc), by = "gene_id")
    
   annot <- annot %>% mutate(chr = gsub("chr", "", seqnames)) %>%
+    dplyr::rename(length = width) %>%
     dplyr::select(-seqnames) %>%   dplyr::select(gene_id, chr, everything())
   
   cat('Annotation file. Final dimension: ', paste(dim(annot), collapse=", "), '\n')
@@ -174,9 +175,7 @@ dir.create(RDATADIR)
   ## Raw counts
   M <- normal_samples$matrix %>% inner_join(cancer_samples$matrix, by = "gene_id")
   cat('Total number of features and samples: ', paste(dim(M), collapse=" ,"), '\n')
-  
-  normal_samples$targets$group <- "normal"
-  cancer_samples$targets$group <- "cancer"
+
   ## Samples
   targets <- bind_rows(normal_samples$targets, cancer_samples$targets)
   
@@ -195,7 +194,7 @@ dir.create(RDATADIR)
   no_gc <- sum(is.na(annot$percentage_gc_content))
   cat("There are",no_gc, "entries with no GC info \n")
   
-  ids <- annot %>% filter(!is.na(gc) & !is.na(width)) %>%
+  ids <- annot %>% filter(!is.na(gc) & !is.na(length)) %>%
     select(gene_id) %>% unlist(use.names = F)
   
   M <- M %>% filter(gene_id %in% ids)
