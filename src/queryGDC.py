@@ -131,7 +131,6 @@ else:
         sys.exit("No records found for " + primary_site + ", " + sample_type)
     
     df = pd.read_csv(StringIO(data), sep ="\t")
-    df.drop_duplicates(subset=["cases.0.case_id"], inplace=True)
 
     df.columns = [col + "_rna" for col in df.columns] 
         
