@@ -47,17 +47,19 @@ w <- 1024
 h <- 1024
 p <- 24
 
-{ 
+{
+  load(file=paste(RDATA, "mean10_proteinCoding.RData", sep="/"))
+  
   cat("Testing normalization methods\n.")
   mydataM10EDA <- EDASeq::newSeqExpressionSet(
-    counts=mean10$M,
-    featureData=mean10$annot,
-    phenoData=data.frame(
-      conditions=mean10$targets$group,
-      row.names=colnames(mean10$M)))
+    counts = mean10$M,
+    featureData = mean10$annot,
+    phenoData = data.frame(
+      conditions = mean10$targets$group,
+      row.names = mean10$targets$id))
   
-  length_norm <- c("full", "loess", "median", "upper")
-  gc_norm <- c("full", "loess", "median", "upper")
+  length_norm <- c("no", "full", "loess", "median", "upper")
+  gc_norm <- c("no", "full", "loess", "median", "upper")
   between_norm <-c("full", "median", "tmm", "upper")
   
   ## This function gets the relevant statistics for the regression methods for GC and Length bias
@@ -141,21 +143,32 @@ p <- 24
   gc_norms <- mclapply(X = 1:nrow(df_normalizations), 
                         mc.cores = MCCORES, 
                         FUN = function(i){
+                          
     gcn <- df_normalizations[i, "gcn"]
     ln <- df_normalizations[i, "ln"]
     bn <- df_normalizations[i, "bn"]
-    gcn_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$gc, which = gcn)
-    ln_data <- withinLaneNormalization(gcn_data, mean10$annot$length, which = ln)
+    
+    if(gcn == "no") {
+      gcn_data <- counts(mydataM10EDA)
+    } else {
+      gcn_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$gc, which = gcn)  
+    }
+    
+    if(ln == "no") {
+      ln_data <- gcn_data
+    } else {
+      ln_data <- withinLaneNormalization(gcn_data, mean10$annot$length, which = ln)
+    }
         
-     if (bn == "tmm") {
+    if (bn == "tmm") {
        between_data <- tmm(ln_data, long = 1000, lc = 0, k = 0)
-     } else {
+    } else {
        between_data <- betweenLaneNormalization(ln_data, which = bn, offset = FALSE)
-     }
-     cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
-     norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
+    }
+    cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
+    norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
                                                        between_data, mean10)
-     return(norm_noiseq_results)
+    return(norm_noiseq_results)
   })
   
   save(gc_norms, file=paste(RDATA, "gc_norms.RData", sep="/"), compress="xz")
@@ -165,11 +178,22 @@ p <- 24
   ln_norms <- mclapply(X = 1:nrow(df_normalizations), 
                         mc.cores = MCCORES,
                         FUN = function(i){
+                          
           gcn <- df_normalizations[i, "gcn"]
           ln <- df_normalizations[i, "ln"]
           bn <- df_normalizations[i, "bn"]
-          ln_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$length, which = ln)
-          gcn_data <- withinLaneNormalization(ln_data, mean10$annot$gc, which = gcn)
+          
+          if(ln == "no") {
+            ln_data <- counts(mydataM10EDA)
+          } else {
+            ln_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$length, which = ln)
+          }
+          
+          if(gcn == "no") {
+            gcn_data <- ln_data
+          } else {
+            gcn_data <- withinLaneNormalization(ln_data, mean10$annot$gc, which = gcn)
+          }
           
           if (bn == "tmm") {
             between_data <- tmm(ln_data, long = 1000, lc = 0, k = 0)
@@ -189,11 +213,11 @@ p <- 24
  
   ## Finally, we test with cqn
   cat("Testing with cqn normalization\n")
-  y_DESeq <- DESeqDataSetFromMatrix(countData=mean10$M, 
-                                  colData=mean10$targets, design= ~group)
+  y_DESeq <- DESeqDataSetFromMatrix(countData = mean10$M, 
+                                  colData = mean10$targets, design= ~group)
   y_DESeq <- estimateSizeFactors(y_DESeq)
   
-  cqn_mean10<- cqn(mean10$M, lengths=mean10$annot$length,
+  cqn_mean10 <- cqn(mean10$M, lengths=mean10$annot$length,
                    x = mean10$annot$gc, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
   normalized_cqn <- cqn_mean10$y + cqn_mean10$offset
   

@@ -46,8 +46,8 @@ p <- 24
 { 
   cat("Integrating plots \n.")
   
-  length_norm <- c("full", "loess", "median", "upper")
-  gc_norm <- c( "full", "loess", "median", "upper")
+  length_norm <- c("no","full", "loess", "median", "upper")
+  gc_norm <- c("no", "full", "loess", "median", "upper")
   between_norm <- c("full", "median", "tmm", "upper")
   
   ## This function will retrieve plots for one normalization set and will create 
