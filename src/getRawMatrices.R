@@ -197,8 +197,8 @@ dir.create(RDATADIR)
   ids <- annot %>% filter(!is.na(gc) & !is.na(length)) %>%
     select(gene_id) %>% unlist(use.names = F)
   
-  M <- M %>% filter(gene_id %in% ids)
-  annot <- annot %>% filter(gene_id %in% ids)
+  M <- M %>% filter(gene_id %in% ids) %>% arrange(gene_id)
+  annot <- annot %>% filter(gene_id %in% ids) %>% arrange(gene_id)
   cat("Non GC and lenght annotated genes removed.\n")
   
   rownames(annot) <- annot$gene_id
