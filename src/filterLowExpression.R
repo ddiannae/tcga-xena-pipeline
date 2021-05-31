@@ -11,6 +11,7 @@
 ## Data Normalization
 ##  - Filter genes with median expression count under 10
 ###############################################################################
+library(dplyr)
 args <- commandArgs(trailingOnly = T)
 
 if (length(args) < 2 ) {
