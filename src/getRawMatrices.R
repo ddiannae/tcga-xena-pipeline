@@ -68,7 +68,7 @@ dir.create(RDATADIR)
     ## Build targets matrix
     targets <- data.frame(id = paste(TISSUE, type, 1:length(files_to_read), sep = "_"), 
                           file = unlist(lapply(strsplit(files_to_read, "/"), "[[", 10)),
-                          file_id = unlist(lapply(strsplit(files_to_read, "/"), "[[", 11)),
+                          file_id = unlist(lapply(strsplit(files_to_read, "/"), "[[", 9)),
                           group = type, stringsAsFactors = FALSE)
     
     ## Rename columns in counts matrix
@@ -78,6 +78,7 @@ dir.create(RDATADIR)
     matrix <- matrix %>% mutate(gene_id = genes[,1]) %>% 
       dplyr::select(gene_id, everything())
     
+    cat(paste0("Matrices for ", type, " ready.\n"))
     return(list(targets = targets, matrix = matrix))
     
   }
