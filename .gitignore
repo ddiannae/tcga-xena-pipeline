@@ -8,3 +8,9 @@ start_local.sh
 *.Rproj
 renv/local
 renv/local/*
+bin/ARACNE
+bin/ARACNE/*
+src/ARACNE
+src/ARACNE/*
+src/contrib
+src/contrib/*
