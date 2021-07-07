@@ -5,17 +5,20 @@
 #
 #TISSUES = ["breast", "prostate", "pancreas", "bladder", "skin", "brain", "liver", "esophagus",  "lung", "kidney", "colorectal", "uterus", "thyroid"]
 #"bladder", "brain", "breast", "colorectal", "esophagus", "kidney", "liver", "lung", "pancreas", "prostate", "skin", "thyroid", "uterus"
-TISSUES = ["bladder"]
+TISSUES = ["lung"]
 DATADIR ="/datos/ot/diana/regulacion-trans"
 ARACNEHOME ="./bin/ARACNE"
 
 # Adjust the umber of cores according to the machine and number of tissues
-MCCORES = 70
+MCCORES = 78
 files = [] 
 for t in TISSUES:
   ## Example:data/breast/manifests/breast-cancer-rna_counts.txt"
-  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_networks/normal_network_1e-8.sort")
-  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_networks/cancer_network_1e-8.sort")
+  #files.append(DATADIR+ "/" + t + "/gc-full_length-no_tmm_mi/normal_mi_matrix.adj")
+  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_mi/cancer_mi_matrix.adj")
+  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_networks/cancer_network_1.adj")
+  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_mi/normal_mi_matrix.adj")
+  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_networks/normal_network_1.adj")
   #files.append(DATADIR+"/" + t+ "/manifests/"+t+"-cancer-rna_counts.txt")
   #files.append(DATADIR+"/" + t+ "/manifests/"+t+"-normal-rna_counts.txt")
   #files.append(DATADIR+"/" + t + "/plots/normalization_plots.pdf")
@@ -25,15 +28,15 @@ rule all:
   input:
     files
 
-    
-rule get_sif_sorted:
-  input:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.sif",
+rule run_infotheo:
+  input: 
+    DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_{type}.tsv"
   output:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.sort",
+    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_mi/{type}_mi_matrix.adj"
   shell:
     """
-    sort -r -k3,3 {input} > {output}
+    mkdir -p {DATADIR}/{wildcards.tissue}/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}_mi
+    Rscript src/getMIMatrix.R {input} {output} {MCCORES}
     """
 
 rule get_sif:
@@ -43,14 +46,24 @@ rule get_sif:
     DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.sif"
   shell:
     """
-    python src/python/adj2sif.py {input} > {output}
+    python src/python/adj2sif.py {input} {output}
     """
 
-rule get_adj_matrix:
+rule get_adj:
   input:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_adj_{pval}",
+    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.aracne_adj"
   output:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.adj",
+    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.adj"
+  shell:
+    """
+    Rscript src/aracneAdjToAdj.R {input} {output} {MCCORES}
+    """
+
+rule get_adj_aracne_matrix:
+  input:
+    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_adj_{pval}"
+  output:
+    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.aracne_adj"
   shell:
     """
     python src/python/joinadj.py {input} {output}
@@ -58,19 +71,15 @@ rule get_adj_matrix:
 
 rule run_aracne_all:
   input: 
-    cancer=DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_cancer.tsv",
-    normal=DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_normal.tsv",
+    matrix=DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_{type}.tsv",
     genelist=DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
   output:
-    normal=directory(DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/normal_adj_{pval}"),
-    cancer=directory(DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/cancer_adj_{pval}")
+    directory(DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_adj_{pval}")
   shell:
     """
     export ARACNEHOME={ARACNEHOME}
-    mkdir -p {output.normal}
-    python src/python/aracne-par.py {input.normal} {input.genelist} {MCCORES} {wildcards.pval} {output.normal} > {DATADIR}/{wildcards.tissue}/log/aracne_normal.log
-    mkdir -p {output.cancer}
-    python src/python/aracne-par.py {input.cancer} {input.genelist} {MCCORES} {wildcards.pval} {output.cancer} > {DATADIR}/{wildcards.tissue}/log/aracne_cancer.log
+    mkdir -p {output}
+    python src/python/aracne-par.py {input.matrix} {input.genelist} {MCCORES} {wildcards.pval} {output} > {DATADIR}/{wildcards.tissue}/log/aracne_{wildcards.type}_{wildcards.pval}.log
     """
 
 rule user_normalization:
