@@ -46,14 +46,26 @@ p <- 24
   second <- strsplit(STEP2, "-")[[1]]
   
   if(first[1] == "length") {
-    norm_counts <- withinLaneNormalization(mean10$M, mean10$annot$length, which = first[2])
+    if(first[2] != "no") {
+      norm_counts <- withinLaneNormalization(mean10$M, mean10$annot$length, which = first[2])  
+    } else {
+      norm_counts <- mean10$M
+    }
     if(second[1] == "gc") {
-      norm_counts <- withinLaneNormalization(norm_counts, mean10$annot$gc, which = second[2])  
+      if(second[2] != "no") {
+        norm_counts <- withinLaneNormalization(norm_counts, mean10$annot$gc, which = second[2])    
+      }
     }
   } else if (first[1] == "gc") {
-    norm_counts <- withinLaneNormalization(mean10$M, mean10$annot$gc, which = first[2])
+    if(first[2] != "no") {
+      norm_counts <- withinLaneNormalization(mean10$M, mean10$annot$gc, which = first[2])
+    } else {
+      norm_counts <- mean10$M
+    }
     if(second[1] == "length") {
-      norm_counts <- withinLaneNormalization(norm_counts, mean10$annot$length, which = second[2])  
+      if(second[2] != "no") {
+        norm_counts <- withinLaneNormalization(norm_counts, mean10$annot$length, which = second[2])  
+      }
     }
   } else {
     norm_counts <- mean10$M
