@@ -53,7 +53,7 @@ p <- 24
   cat("Testing normalization methods\n.")
   mydataM10EDA <- EDASeq::newSeqExpressionSet(
     counts = mean10$M,
-    featureData = mean10$annot,
+    featureData = mean10$annot %>% as.data.frame(),
     phenoData = data.frame(
       conditions = mean10$targets$group,
       row.names = mean10$targets$id))
@@ -77,11 +77,11 @@ p <- 24
     ### Check the NOISEq results 
     mydata <- NOISeq::readData(
       data = n_counts, 
-      length = m10_data$annot %>% select(gene_id, length), 
-      biotype = m10_data$annot %>% select(gene_id, gene_type), 
-      chromosome = m10_data$annot %>% select(chr, start, end), 
-      factors = m10_data$targets %>% select(group),
-      gc = m10_data$annot %>% select(gene_id, gc))
+      length = m10_data$annot %>% select(gene_id, length) %>% as.data.frame(), 
+      biotype = m10_data$annot %>% select(gene_id, gene_type) %>% as.data.frame(), 
+      chromosome = m10_data$annot %>% select(chr, start, end) %>% as.data.frame(),  
+      factors = m10_data$targets %>% select(group) %>% as.data.frame(), 
+      gc = m10_data$annot %>% select(gene_id, gc)%>% as.data.frame())
 
     nsamples <- dim(m10_data$targets)[1]
     
