@@ -1,28 +1,32 @@
 ## Snakefile for ASCAT2 files from GDC
 ##
 ## Tissue type just like in GDC, lowercase is fine
-### DONE_IMAGES = ["esophagus", "skin", "breast", "kidney","lung", "liver", "prostate", "pancreas", "bladder", "brain", "colorectal", "uterus", "thyroid"]  
-#
-#TISSUES = ["breast", "prostate", "pancreas", "bladder", "skin", "brain", "liver", "esophagus",  "lung", "kidney", "colorectal", "uterus", "thyroid"]
-#"bladder", "brain", "breast", "colorectal", "esophagus", "kidney", "liver", "lung", "pancreas", "prostate", "skin", "thyroid", "uterus"
-TISSUES = ["lung"]
-DATADIR ="/datos/ot/diana/regulacion-trans"
-ARACNEHOME ="./bin/ARACNE"
+configfile: "config.yaml"
 
 # Adjust the umber of cores according to the machine and number of tissues
 MCCORES = 78
 files = [] 
-for t in TISSUES:
+for t in config["xena_tissues"]:
   ## Example:data/breast/manifests/breast-cancer-rna_counts.txt"
-  #files.append(DATADIR+ "/" + t + "/gc-full_length-no_tmm_mi/normal_mi_matrix.adj")
-  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_mi/cancer_mi_matrix.adj")
-  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_networks/cancer_network_1.adj")
-  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_mi/normal_mi_matrix.adj")
-  files.append(DATADIR+ "/" + t + "/gc-full_length-full_tmm_networks/normal_network_1.adj")
-  #files.append(DATADIR+"/" + t+ "/manifests/"+t+"-cancer-rna_counts.txt")
-  #files.append(DATADIR+"/" + t+ "/manifests/"+t+"-normal-rna_counts.txt")
-  #files.append(DATADIR+"/" + t + "/plots/normalization_plots.pdf")
-  #files.apped(DATADIR+ "/" + t + "/rdata/normalization_results.tsv")
+  files.append(config["datadir"]+"/"+t["name"]+"/rdata/mean10_proteinCoding.RData")
+  #files.append(config["datadir"]+ "/" + t + "/gc-upper_length-no_tmm_networks/cancer_network_1.adj")
+  #files.append(config["datadir"]+ "/" + t + "/gc-upper_length-no_tmm_networks/normal_network_1.adj")
+
+#for t in config["tissues"]:
+#  files.append(config["datadir"]+"/"+t+"/"+t+"-matrix.tsv")
+
+def getRawMatrixInput(wildcards):
+  print(wildcards.tissue)
+  if wildcards.tissue not in config["xena"]:
+    return [config["datadir"]+"/{wildcards.tissue}/manifests/{wildcards.tissue}-normal-rna_counts.txt", config["datadir"]+"/{wildcards.tissue}/manifests/{wildcards.tissue}-cancer-rna_counts.txt"]
+  else:
+    return [config["datadir"]+"/xena/counts.gz",config["datadir"]+"/xena/samples.txt.gz", config["datadir"]+"/xena/annot.tsv"]
+
+def getNormalTissue(wildcards):
+  return [x["normal"] for x in config["xena_tissues"] if x["name"] == wildcards.tissue][0]
+
+def getCancerTissue(wildcards):
+  return [x["cancer"] for x in config["xena_tissues"] if x["name"] == wildcards.tissue][0]
 
 rule all:
   input:
@@ -30,20 +34,20 @@ rule all:
 
 rule run_infotheo:
   input: 
-    DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_{type}.tsv"
+    config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_{type}.tsv"
   output:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_mi/{type}_mi_matrix.adj"
+    config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_mi/{type}_mi_matrix.adj"
   shell:
     """
-    mkdir -p {DATADIR}/{wildcards.tissue}/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}_mi
+    mkdir -p {config['datadir']}/{wildcards.tissue}/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}_mi
     Rscript src/getMIMatrix.R {input} {output} {MCCORES}
     """
 
 rule get_sif:
   input:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.adj"
+    config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.adj"
   output:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.sif"
+    config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.sif"
   shell:
     """
     python src/python/adj2sif.py {input} {output}
@@ -51,9 +55,9 @@ rule get_sif:
 
 rule get_adj:
   input:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.aracne_adj"
+    config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.aracne_adj"
   output:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.adj"
+    config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.adj"
   shell:
     """
     Rscript src/aracneAdjToAdj.R {input} {output} {MCCORES}
@@ -61,9 +65,9 @@ rule get_adj:
 
 rule get_adj_aracne_matrix:
   input:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_adj_{pval}"
+    config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_adj_{pval}"
   output:
-    DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.aracne_adj"
+    config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.aracne_adj"
   shell:
     """
     python src/python/joinadj.py {input} {output}
@@ -71,88 +75,121 @@ rule get_adj_aracne_matrix:
 
 rule run_aracne_all:
   input: 
-    matrix=DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_{type}.tsv",
-    genelist=DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
+    matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_{type}.tsv",
+    genelist=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
   output:
-    directory(DATADIR+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_adj_{pval}")
+    directory(config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_adj_{pval}")
   shell:
     """
-    export ARACNEHOME={ARACNEHOME}
+    export ARACNEHOME={config['aracnehome']}
     mkdir -p {output}
-    python src/python/aracne-par.py {input.matrix} {input.genelist} {MCCORES} {wildcards.pval} {output} > {DATADIR}/{wildcards.tissue}/log/aracne_{wildcards.type}_{wildcards.pval}.log
+    python src/python/aracne-par.py {input.matrix} {input.genelist} {MCCORES} {wildcards.pval} {output} > {config['datadir']}/{wildcards.tissue}/log/aracne_{wildcards.type}_{wildcards.pval}.log
     """
 
 rule user_normalization:
   input:
-    DATADIR+"/{tissue}/rdata/mean10_proteinCoding.RData"
+    config["datadir"]+"/{tissue}/rdata/mean10_proteinCoding.RData"
   output:
-    DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn.RData",
-    DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_cancer.tsv",
-    DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_normal.tsv",
-    DATADIR+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
+    config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn.RData",
+    config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_cancer.tsv",
+    config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_normal.tsv",
+    config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
   shell:
-    "Rscript src/userNormalization.R {wildcards.tissue} {DATADIR} {wildcards.step1} {wildcards.step2} {wildcards.step3} > {DATADIR}/{wildcards.tissue}/log/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}normalization_plots.log" 
+    "Rscript src/userNormalization.R {wildcards.tissue} {config['datadir']} {wildcards.step1} {wildcards.step2} {wildcards.step3} > {config['datadir']}/{wildcards.tissue}/log/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}normalization_plots.log" 
 
 rule normalization_plots:
   input:
-    DATADIR+"/{tissue}/rdata/normalization_results.tsv"
+    config["datadir"]+"/{tissue}/rdata/normalization_results.tsv"
   output:
-    DATADIR+"/{tissue}/plots/normalization_plots.pdf"
+    config["datadir"]+"/{tissue}/plots/normalization_plots.pdf"
   shell:
-    "Rscript src/normalizationPlots.R {wildcards.tissue} {DATADIR} {MCCORES} > {DATADIR}/{wildcards.tissue}/log/normalization_plots.log" 
+    "Rscript src/normalizationPlots.R {wildcards.tissue} {config['datadir']} {MCCORES} > {config['datadir']}/{wildcards.tissue}/log/normalization_plots.log" 
 
 rule normalization_test:
   input:
-    DATADIR+"/{tissue}/rdata/mean10_proteinCoding.RData",
+    config["datadir"]+"/{tissue}/rdata/mean10_proteinCoding.RData",
   output:
-    DATADIR+"/{tissue}/rdata/normalization_results.tsv"
+    config["datadir"]+"/{tissue}/rdata/normalization_results.tsv"
   shell:
-    "Rscript src/normalizationTest.R {wildcards.tissue} {DATADIR} {MCCORES} > {DATADIR}/{wildcards.tissue}/log/normalization_test.log"
+    "Rscript src/normalizationTest.R {wildcards.tissue} {config['datadir']} {MCCORES} > {config['datadir']}/{wildcards.tissue}/log/normalization_test.log"
 
 rule filter_low_expression:
   input:
-    DATADIR+"/{tissue}/rdata/raw_full.RData",
-    DATADIR+"/{tissue}/plots/pca_score_raw.png"
+    config["datadir"]+"/{tissue}/rdata/raw_full.RData",
+    config["datadir"]+"/{tissue}/plots/pca_score_raw.png"
   output:
-    DATADIR+"/{tissue}/rdata/mean10_proteinCoding.RData",
-  shell:
-    "Rscript src/filterLowExpression.R {wildcards.tissue} {DATADIR} > {DATADIR}/{wildcards.tissue}/log/filter_low.log"
+    config["datadir"]+"/{tissue}/rdata/mean10_proteinCoding.RData",
+  params:
+    tissuedir=config["datadir"]+"/{wildcards.tissue}",
+    logfile=config["datadir"]+"/{wildcards.tissue}/log/filter_low.log"
+  run:
+    shell(f'Rscript src/filterLowExpression.R {wildcards.tissue} {params.tissuedir} > {params.logfile}')
 
 rule qc:
   input:
-    DATADIR+"/{tissue}/rdata/raw_full.RData"
+    config["datadir"]+"/{tissue}/rdata/raw_full.RData"
   output:
-    DATADIR+"/{tissue}/plots/pca_score_raw.png"
-  shell:
-    "Rscript src/QC.R {wildcards.tissue} {DATADIR} > {DATADIR}/{wildcards.tissue}/log/qc.log"
+    config["datadir"]+"/{tissue}/plots/pca_score_raw.png"
+  params:
+    tissuedir=config["datadir"]+"/{wildcards.tissue}",
+    logfile=config["datadir"]+"/{wildcards.tissue}/log/qc.log"
+  run:
+    shell(f'Rscript src/QC.R {wildcards.tissue} {params.tissuedir} > {params.logfile}')
     
 ## We need to run these two together because the output of the download_files
 ## tasks depends on the manifest and there is no easy way to specify this on 
 ## snakemake
 rule download_files_and_get_ascat_matrix:
-  input:
-    ## Manifest file
-    normal=DATADIR+"/{tissue}/manifests/{tissue}-normal-rna_counts.txt",
-    cancer=DATADIR+"/{tissue}/manifests/{tissue}-cancer-rna_counts.txt",
+  input: getRawMatrixInput
   output: 
-    DATADIR+"/{tissue}/{tissue}-matrix.tsv",
-    DATADIR+"/{tissue}/{tissue}-samples.tsv",
-    DATADIR+"/{tissue}/rdata/raw_full.RData"
-  shell:
-    """
-    mkdir -p {DATADIR}/{wildcards.tissue}/raw/{wildcards.tissue}-normal-rna
-    mkdir -p {DATADIR}/{wildcards.tissue}/raw/{wildcards.tissue}-cancer-rna
-    ./bin/gdc-client download -d {DATADIR}/{wildcards.tissue}/raw/{wildcards.tissue}-normal-rna -m {input.normal} --retry-amount 3
-    ./bin/gdc-client download -d {DATADIR}/{wildcards.tissue}/raw/{wildcards.tissue}-cancer-rna -m {input.cancer} --retry-amount 3
-    Rscript src/getRawMatrices.R {wildcards.tissue} {DATADIR} > {DATADIR}/{wildcards.tissue}/log/get-matrix.log
-    """
+    config["datadir"]+"/{tissue}/{tissue}-matrix.tsv",
+    config["datadir"]+"/{tissue}/{tissue}-samples.tsv",
+    config["datadir"]+"/{tissue}/rdata/raw_full.RData"
+  params:
+    normaldir=config["datadir"]+"/{wildcards.tissue}/raw/{wildcards.tissue}-normal-rna",
+    cancerdir=config["datadir"]+"/{wildcards.tissue}/raw/{wildcards.tissue}-cancer-rna",
+    tissuedir=config["datadir"]+"/{wildcards.tissue}",
+    logdir=config["datadir"]+"/{wildcards.tissue}/log",
+    logfile=config["datadir"]+"/{wildcards.tissue}/log/get-matrix.log",
+    normaltissue=getNormalTissue,
+    cancertissue=getCancerTissue
+  run: 
+    if wildcards.tissue not in config["xena"]:
+      shell(f'mkdir -p {params.normaldir}')
+      shell(f'mkdir -p {params.cancerdir}')
+      shell(f'./bin/gdc-client download -d {params.normaldir} -m {input[0]} --retry-amount 3')
+      shell(f'./bin/gdc-client download -d {params.cancerdir} -m {input[1]} --retry-amount 3')
+      shell(f'Rscript src/getRawMatrices.R {wildcards.tissue} {params.tissuedir} > {params.logfile}')
+    else:
+      shell(f'mkdir -p {params.tissuedir}')
+      shell(f'mkdir -p {params.logdir}')
+      shell(f'Rscript src/getRawXENAMatrices.R {input[0]} {input[1]} {input[2]} {wildcards.tissue} "{params.normaltissue}" "{params.cancertissue}" {params.tissuedir} {config["mccores"]} > {params.logfile}') 
+
 rule get_manifest:
   output:
     ## Example: data/breast/manifests/breast-cancer-rna_counts.txt"
-    DATADIR+"/{tissue}/manifests/{tissue}-{type}-rna_counts.txt"
+    config["datadir"]+"/{tissue}/manifests/{tissue}-{type}-rna_counts.txt"
+  params:
+    logdir=config["datadir"]+"/{wildcards.tissue}/log",
+    manidir=config["datadir"]+"/{wildcards.tissue}/manifests"
   shell:
     """
-    mkdir -p {DATADIR}/{wildcards.tissue}/log
-    mkdir -p {DATADIR}/{wildcards.tissue}/manifests
-    python src/queryGDC.py {wildcards.tissue} {wildcards.type} {DATADIR}/{wildcards.tissue}/manifests false 
+    mkdir -p {params.logdir}
+    mkdir -p {params.manidir}
+    python src/queryGDC.py {wildcards.tissue} {wildcards.type} {params.manidir} false 
+    """
+
+rule get_xena_files:
+  output:
+    counts=config["datadir"]+"/xena/counts.gz",
+    samples=config["datadir"]+"/xena/samples.txt.gz",
+    annot=config["datadir"]+"/xena/annot.tsv"
+  params:
+    xenadir=config["datadir"]+"/xena"
+  shell:
+    """
+    mkdir -p {params.xenadir}
+    wget https://toil-xena-hub.s3.us-east-1.amazonaws.com/download/TcgaTargetGtex_gene_expected_count.gz -O {output.counts}
+    wget https://toil-xena-hub.s3.us-east-1.amazonaws.com/download/probeMap%2Fgencode.v23.annotation.gene.probemap -O {output.annot}
+    wget https://toil-xena-hub.s3.us-east-1.amazonaws.com/download/TcgaTargetGTEX_phenotype.txt.gz -O {output.samples}
     """

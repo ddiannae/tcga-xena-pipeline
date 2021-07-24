@@ -1,0 +1,10 @@
+datadir: /datos/ot/diana/regulacion-trans
+aracnehome: /home/dgarcia/Workspace/regulaciontrans-pipeline/bin/ARACNE
+#bladder, brain, breast, colorectal, esophagus, kidney, liver, lung, pancreas, prostate, skin, thyroid, uterus
+tissues: [uterus]
+xena_tissues: 
+- name: skin
+  normal: Skin - Not Sun Exposed (Suprapubic)
+  cancer: Skin Cutaneous Melanoma
+xena: [skin, pancreas, esophagus, brain, ovary, testis]
+mccores: 35
