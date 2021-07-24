@@ -20,7 +20,7 @@ if (length(args) < 2 ) {
   TISSUE = args[1]
   DATADIR = args[2]
 }
-DATADIR <- paste(DATADIR, TISSUE, sep="/")
+
 RDATA <- paste(DATADIR, "rdata", sep="/")
 ##########################################################################
 load(file=paste(RDATA, "raw_full.RData", sep="/"))

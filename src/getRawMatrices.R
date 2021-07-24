@@ -24,10 +24,9 @@ args <- commandArgs(trailingOnly = T)
 if (length(args) < 2 ) {
   stop("Incorrect number of arguments", call.=FALSE)
 } else {
-  TISSUE = args[1]
-  DATADIR = args[2]
+  TISSUE <- args[1]
+  DATADIR <- args[2]
 }
-DATADIR <- paste(DATADIR, TISSUE, sep="/")
 RAWDIR <- paste(DATADIR, "raw", sep="/")
 RDATADIR <- paste(DATADIR, "rdata", sep="/")
 dir.create(RDATADIR)

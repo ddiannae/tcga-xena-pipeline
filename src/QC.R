@@ -34,7 +34,6 @@ if (length(args) < 2 ) {
   DATADIR = args[2]
 }
 
-DATADIR <- paste(DATADIR, TISSUE, sep="/")
 RDATA <- paste(DATADIR, "rdata", sep="/")
 PLOTSDIR <-paste(DATADIR, "plots", sep="/")
 dir.create(PLOTSDIR)
@@ -50,11 +49,11 @@ load(file=paste(RDATA, "raw_full.RData", sep="/"))
   ## Reading data into NOISeq package -> mydata
   mydata <- NOISeq::readData(
     data = full$M, 
-    length = full$annot %>% select(gene_id, length), 
-    biotype = full$annot %>% select(gene_id, gene_type), 
-    chromosome = full$annot %>% select(chr, start, end), 
-    factors = full$targets %>% select(group),
-    gc = full$annot %>% select(gene_id, gc))
+    length = full$annot %>% select(gene_id, length) %>% as.data.frame(), 
+    biotype = full$annot %>% select(gene_id, gene_type) %>% as.data.frame(), 
+    chromosome = full$annot %>% select(chr, start, end) %>% as.data.frame(), 
+    factors = full$targets %>% select(group) %>% as.data.frame(),
+    gc = full$annot %>% select(gene_id, gc) %>% as.data.frame())
 
 }
 ##########################################
