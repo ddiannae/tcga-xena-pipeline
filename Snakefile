@@ -32,17 +32,6 @@ rule all:
 	input:
 		files
 
-rule run_infotheo:
-	input: 
-		config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_{type}.tsv"
-	output:
-		config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_mi/{type}_mi_matrix.adj"
-	shell:
-		"""
-		mkdir -p {config['datadir']}/{wildcards.tissue}/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}_mi
-		Rscript src/getMIMatrix.R {input} {output} {MCCORES}
-		"""
-
 rule get_sif:
 	input:
 		config["datadir"]+"/{tissue}/{step1}_{step2}_{step3}_networks/{type}_network_{pval}.adj"
