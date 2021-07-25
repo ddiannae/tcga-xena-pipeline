@@ -3,6 +3,7 @@ configfile: "config.yaml"
 
 include: "rules/common.smk"
 include: "rules/xena.smk"
+include: "rules/qc.smk"
 
 # Adjust the umber of cores according to the machine and number of tissues
 MCCORES = 78
@@ -114,16 +115,6 @@ rule filter_low_expression:
 	run:
 		shell(f'Rscript src/filterLowExpression.R {wildcards.tissue} {params.tissuedir} > {params.logfile}')
 
-rule qc:
-	input:
-		config["datadir"]+"/{tissue}/rdata/raw_full.RData"
-	output:
-		config["datadir"]+"/{tissue}/plots/pca_score_raw.png"
-	params:
-		tissuedir=config["datadir"]+"/{wildcards.tissue}",
-		logfile=config["datadir"]+"/{wildcards.tissue}/log/qc.log"
-	run:
-		shell(f'Rscript src/QC.R {wildcards.tissue} {params.tissuedir} > {params.logfile}')
 		
 ## We need to run these two together because the output of the download_files
 ## tasks depends on the manifest and there is no easy way to specify this on 

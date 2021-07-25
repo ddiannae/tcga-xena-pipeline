@@ -22,26 +22,22 @@
 ##        -RNA composition
 ##    -PCA
 ##############################################################################
+log <- file(snakemake@log[[1]], open="wt")
+sink(log)
+sink(log, type="message")
+
 library(dplyr)
 library(NOISeq)
 library(ggplot2)
-args <- commandArgs(trailingOnly = T)
 
-if (length(args) < 2 ) {
-  stop("Incorrect number of arguments", call.=FALSE)
-} else {
-  TISSUE = args[1]
-  DATADIR = args[2]
-}
-
-RDATA <- paste(DATADIR, "rdata", sep="/")
-PLOTSDIR <-paste(DATADIR, "plots", sep="/")
+RDATA <- paste(snakemake@params[["tissue_dir"]], "rdata", sep="/")
+PLOTSDIR <-paste(snakemake@params[["tissue_dir"]], "plots", sep="/")
 dir.create(PLOTSDIR)
 w <- 1024
 h <- 1024
 p <- 24
 
-load(file=paste(RDATA, "raw_full.RData", sep="/"))
+load(snakemake@input[[1]])
 ##########################################
 ## EXPLORATORY ANALYSIS (NOISeq package)
 ##########################################
