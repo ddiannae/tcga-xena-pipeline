@@ -39,8 +39,12 @@ dir.create(RDATADIR)
     targets <- matrix_samples %>% dplyr::filter(primary_site == camelTissue &
                                            primary_disease_or_tissue == primary_disease &
                                            sample_type == extended_type)
+    
+    ### Expected counts from XENA are in log2(expected_count+1)
+    ### get them back to expected_count for downstream pipeline
     matrix <- matrix_counts %>% dplyr::select_if(names(.) %in% c("sample", targets$sample)) %>%
-      select(sample, everything())
+      dplyr::select(sample, everything())%>% dplyr::mutate(across(-sample, ~ .x^2-1))
+    matrix[matrix < 0] <- 0
     
     targets <- targets %>% dplyr::filter(sample %in% names(matrix)) %>%
       dplyr::mutate(id = paste(tissue, type, 1:nrow(.), sep = "_"), group = type) %>% 
