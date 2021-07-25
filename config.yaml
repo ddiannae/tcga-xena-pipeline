@@ -1,4 +1,5 @@
 datadir: /datos/ot/diana/regulacion-trans
+xenadir: xena
 aracnehome: /home/dgarcia/Workspace/regulaciontrans-pipeline/bin/ARACNE
 #bladder, brain, breast, colorectal, esophagus, kidney, liver, lung, pancreas, prostate, skin, thyroid, uterus
 tissues: [uterus]
