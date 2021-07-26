@@ -1,5 +1,9 @@
+from snakemake.utils import min_version
 
-configfile: "config.yaml"
+##### set minimum snakemake version #####
+min_version("5.12.0")
+
+configfile: "config/config.yaml"
 
 include: "rules/common.smk"
 include: "rules/xena.smk"

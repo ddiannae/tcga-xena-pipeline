@@ -4,7 +4,7 @@ rule qc:
     output:
         config["datadir"]+"/{tissue}/plots/pca_score_raw.png"
     params:
-        tissue_dir=get_tissue_dir,
+        tissue_dir=get_tissue_dir
     log:
         config["datadir"]+"/{tissue}/log/qc.log"
     script:

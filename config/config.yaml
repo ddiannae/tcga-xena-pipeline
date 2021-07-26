@@ -8,4 +8,4 @@ xena_tissues:
   normal: Skin - Not Sun Exposed (Suprapubic)
   cancer: Skin Cutaneous Melanoma
 xena: [skin, pancreas, esophagus, brain, ovary, testis]
-mccores: 35
+mccores: 78
