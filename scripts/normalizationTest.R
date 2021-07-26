@@ -15,6 +15,10 @@
 ##      Between lanes. TMM, full
 ##  - Generate plots
 ###############################################################################
+log <- file(snakemake@log[[1]], open="wt")
+sink(log)
+sink(log, type="message")
+
 library(ggplot2)
 library(reshape2)
 library(grid)
@@ -26,21 +30,10 @@ library(dplyr)
 library(NOISeq)
 library(EDASeq)
 library(DESeq2)
-library(cqn)
 
 ###############################################################################
-args <- commandArgs(trailingOnly = T)
-
-if (length(args) < 3 ) {
-  stop("Incorrect number of arguments", call.=FALSE)
-} else {
-  TISSUE = args[1]
-  DATADIR = args[2]
-  MCCORES = args[3]
-}
-DATADIR <- paste(DATADIR, TISSUE, sep="/")
-RDATA <- paste(DATADIR, "rdata", sep="/")
-PLOTSDIR <-paste(DATADIR, "plots", sep="/")
+MCCORES <- as.numeric(snakemake@params[["mccores"]])
+PLOTSDIR <-paste(snakemake@params[["tissue_dir"]], "plots", sep="/")
 PLOTSNORMDIR <- paste(PLOTSDIR, "normalization", sep = "/")
 dir.create(PLOTSNORMDIR)
 w <- 1024
@@ -48,7 +41,7 @@ h <- 1024
 p <- 24
 
 {
-  load(file=paste(RDATA, "mean10_proteinCoding.RData", sep="/"))
+  load(snakemake@input[[1]])
   
   cat("Testing normalization methods\n.")
   mydataM10EDA <- EDASeq::newSeqExpressionSet(
@@ -171,7 +164,6 @@ p <- 24
     return(norm_noiseq_results)
   })
   
-  save(gc_norms, file=paste(RDATA, "gc_norms.RData", sep="/"), compress="xz")
   gc_norms <- bind_rows(gc_norms)
   
   ## Normalizations with Length step first
@@ -206,26 +198,11 @@ p <- 24
           return(norm_noiseq_results)                                         
   })
   
-  save(ln_norms, file=paste(RDATA, "ln_norms.RData", sep="/"), compress="xz")
   ln_norms <- bind_rows(ln_norms)
   
   normalization_results <- bind_rows(gc_norms, ln_norms)
  
-  ## Finally, we test with cqn
-  cat("Testing with cqn normalization\n")
-  y_DESeq <- DESeqDataSetFromMatrix(countData = mean10$M, 
-                                  colData = mean10$targets, design= ~group)
-  y_DESeq <- estimateSizeFactors(y_DESeq)
-  
-  cqn_mean10 <- cqn(mean10$M, lengths=mean10$annot$length,
-                   x = mean10$annot$gc, sizeFactors=sizeFactors(y_DESeq), verbose=TRUE)
-  normalized_cqn <- cqn_mean10$y + cqn_mean10$offset
-  
-  norm_noiseq_results <- getNOISeqResults("gc_cqn", "length_cqn", "between_cqn", normalized_cqn, mean10)
-  
-  normalization_results <- bind_rows(normalization_results, norm_noiseq_results)
- 
   cat("End of normalization testing\n")
   cat("Saving normalization_results.tsv\n") 
-  write_tsv(normalization_results, paste(RDATA, "normalization_results.tsv", sep="/"))
+  write_tsv(normalization_results, snakemake@output[[1]])
 }

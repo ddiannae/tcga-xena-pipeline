@@ -17,27 +17,22 @@
 ##  - Integrate plots per normalization type in one png
 ##  - Integrate all results in one pdf
 ###############################################################################
+log <- file(snakemake@log[[1]], open="wt")
+sink(log)
+sink(log, type="message")
+
 library(ggplot2)
 library(reshape2)
 library(grid)
 library(png)
 library(gridExtra)
-library(parallel)
 library(readr)
 library(dplyr)
 
 ###############################################################################
 args <- commandArgs(trailingOnly = T)
 
-if (length(args) < 2 ) {
-  stop("Incorrect number of arguments", call.=FALSE)
-} else {
-  TISSUE = args[1]
-  DATADIR = args[2]
-  MCCORES = args[3]
-}
-DATADIR <- paste(DATADIR, TISSUE, sep="/")
-PLOTSDIR <-paste(DATADIR, "plots", sep="/")
+PLOTSDIR <-paste(snakemake@params[["tissue_dir"]], "plots", sep="/")
 PLOTSNORMDIR <- paste(PLOTSDIR, "normalization", sep = "/")
 w <- 1024
 h <- 1024
@@ -78,8 +73,7 @@ p <- 24
   
   cat("Getting plots for all ", nrow(df_normalizations), "normalization combinations.\n")
 
-  plots <- mclapply(X = 1:nrow(df_normalizations), mc.cores = MCCORES, 
-                       FUN = function(i){
+  plots <- lapply(1:nrow(df_normalizations),  function(i){
                          gcn <- df_normalizations[i, "gcn"]
                          ln <- df_normalizations[i, "ln"]
                          bn <- df_normalizations[i, "bn"]
@@ -92,10 +86,6 @@ p <- 24
                                    paste("gc", gcn, sep = "_"), 
                                    paste("between", bn, sep =  "_"))
                        })
-  
-  ## Finally, we test with cqn
-  cat("Getting plots for cqn normalization\n")
-  savePlots("gc_cqn", "length_cqn", "between_cqn")
   
   pngPlots <- list.files(path = PLOTSNORMDIR, pattern = "*.png", full.names = TRUE)
 
