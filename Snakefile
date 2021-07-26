@@ -4,12 +4,13 @@ configfile: "config.yaml"
 include: "rules/common.smk"
 include: "rules/xena.smk"
 include: "rules/qc.smk"
+include: "rules/normalization.smk"
 
 # Adjust the umber of cores according to the machine and number of tissues
 MCCORES = 78
-files = [] 
+files = []
 for t in config["xena_tissues"]:
-	files.append(config["datadir"]+"/"+t["name"]+"/plots/pca_score_raw.png")
+	files.append(config["datadir"]+"/"+t["name"]+"/rdata/mean10_protein_coding.RData")
 	#files.append(config["datadir"]+ "/" + t + "/gc-upper_length-no_tmm_networks/cancer_network_1.adj")
 	#files.append(config["datadir"]+ "/" + t + "/gc-upper_length-no_tmm_networks/normal_network_1.adj")
 
@@ -87,35 +88,6 @@ rule user_normalization:
 	shell:
 		"Rscript src/userNormalization.R {wildcards.tissue} {config['datadir']} {wildcards.step1} {wildcards.step2} {wildcards.step3} > {config['datadir']}/{wildcards.tissue}/log/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}normalization_plots.log" 
 
-rule normalization_plots:
-	input:
-		config["datadir"]+"/{tissue}/rdata/normalization_results.tsv"
-	output:
-		config["datadir"]+"/{tissue}/plots/normalization_plots.pdf"
-	shell:
-		"Rscript src/normalizationPlots.R {wildcards.tissue} {config['datadir']} {MCCORES} > {config['datadir']}/{wildcards.tissue}/log/normalization_plots.log" 
-
-rule normalization_test:
-	input:
-		config["datadir"]+"/{tissue}/rdata/mean10_proteinCoding.RData",
-	output:
-		config["datadir"]+"/{tissue}/rdata/normalization_results.tsv"
-	shell:
-		"Rscript src/normalizationTest.R {wildcards.tissue} {config['datadir']} {MCCORES} > {config['datadir']}/{wildcards.tissue}/log/normalization_test.log"
-
-rule filter_low_expression:
-	input:
-		config["datadir"]+"/{tissue}/rdata/raw_full.RData",
-		config["datadir"]+"/{tissue}/plots/pca_score_raw.png"
-	output:
-		config["datadir"]+"/{tissue}/rdata/mean10_proteinCoding.RData",
-	params:
-		tissuedir=config["datadir"]+"/{wildcards.tissue}",
-		logfile=config["datadir"]+"/{wildcards.tissue}/log/filter_low.log"
-	run:
-		shell(f'Rscript src/filterLowExpression.R {wildcards.tissue} {params.tissuedir} > {params.logfile}')
-
-		
 ## We need to run these two together because the output of the download_files
 ## tasks depends on the manifest and there is no easy way to specify this on 
 ## snakemake
