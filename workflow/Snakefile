@@ -10,33 +10,9 @@ include: "rules/xena.smk"
 include: "rules/qc.smk"
 include: "rules/normalization.smk"
 
-# Adjust the umber of cores according to the machine and number of tissues
-MCCORES = 78
-files = []
-for t in config["xena_tissues"]:
-    files.append(config["datadir"]+"/"+t["name"]+"/rdata/mean10_protein_coding.RData")
-    #files.append(config["datadir"]+ "/" + t + "/gc-upper_length-no_tmm_networks/cancer_network_1.adj")
-    #files.append(config["datadir"]+ "/" + t + "/gc-upper_length-no_tmm_networks/normal_network_1.adj")
-
-#for t in config["tissues"]:
-#  files.append(config["datadir"]+"/"+t+"/"+t+"-matrix.tsv")
-
-def getRawMatrixInput(wildcards):
-    print(wildcards.tissue)
-    if wildcards.tissue not in config["xena"]:
-        return [config["datadir"]+"/{wildcards.tissue}/manifests/{wildcards.tissue}-normal-rna_counts.txt", config["datadir"]+"/{wildcards.tissue}/manifests/{wildcards.tissue}-cancer-rna_counts.txt"]
-    else:
-        return [config["datadir"]+"/xena/counts.gz",config["datadir"]+"/xena/samples.txt.gz", config["datadir"]+"/xena/annot.tsv"]
-
-def getNormalTissue(wildcards):
-    return [x["normal"] for x in config["xena_tissues"] if x["name"] == wildcards.tissue][0]
-
-def getCancerTissue(wildcards):
-    return [x["cancer"] for x in config["xena_tissues"] if x["name"] == wildcards.tissue][0]
-
 rule all:
     input:
-        files
+        get_output_files
 
 rule get_sif:
     input:
@@ -92,9 +68,7 @@ rule user_normalization:
     shell:
         "Rscript src/userNormalization.R {wildcards.tissue} {config['datadir']} {wildcards.step1} {wildcards.step2} {wildcards.step3} > {config['datadir']}/{wildcards.tissue}/log/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}normalization_plots.log" 
 
-## We need to run these two together because the output of the download_files
-## tasks depends on the manifest and there is no easy way to specify this on 
-## snakemake
+## Needs tons of refactor
 rule download_files_and_get_ascat_matrix:
     input: getRawMatrixInput
     output: 
