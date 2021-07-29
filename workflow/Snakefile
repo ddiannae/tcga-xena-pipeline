@@ -57,17 +57,6 @@ rule run_aracne_all:
         python src/python/aracne-par.py {input.matrix} {input.genelist} {MCCORES} {wildcards.pval} {output} > {config['datadir']}/{wildcards.tissue}/log/aracne_{wildcards.type}_{wildcards.pval}.log
         """
 
-rule user_normalization:
-    input:
-        config["datadir"]+"/{tissue}/rdata/mean10_proteinCoding.RData"
-    output:
-        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn.RData",
-        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_cancer.tsv",
-        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_normal.tsv",
-        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
-    shell:
-        "Rscript src/userNormalization.R {wildcards.tissue} {config['datadir']} {wildcards.step1} {wildcards.step2} {wildcards.step3} > {config['datadir']}/{wildcards.tissue}/log/{wildcards.step1}_{wildcards.step2}_{wildcards.step3}normalization_plots.log" 
-
 ## Needs tons of refactor
 rule download_files_and_get_ascat_matrix:
     input: getRawMatrixInput
