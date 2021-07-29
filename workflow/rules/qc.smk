@@ -2,10 +2,11 @@ rule qc:
     input:
         config["datadir"]+"/{tissue}/rdata/raw_full.RData"
     output:
-        config["datadir"]+"/{tissue}/plots/pca_score_raw.png"
+        config["datadir"]+"/{tissue}/plots/{plots_type}/pca_score.png"
     params:
-        tissue_dir=get_tissue_dir
+        tissue_dir=get_tissue_dir,
+        plots_type="{plots_type}"
     log:
-        config["datadir"]+"/{tissue}/log/qc.log"
+        config["datadir"]+"/{tissue}/log/{plots_type}_qc.log"
     script:
-        "../scripts/QC.R"
+        "../scripts/NOISeqPlots.R"

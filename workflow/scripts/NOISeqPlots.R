@@ -30,9 +30,8 @@ library(dplyr)
 library(NOISeq)
 library(ggplot2)
 
-RDATA <- paste(snakemake@params[["tissue_dir"]], "rdata", sep="/")
-PLOTSDIR <-paste(snakemake@params[["tissue_dir"]], "plots", sep="/")
-dir.create(PLOTSDIR)
+PLOTSDIR <-paste(snakemake@params[["tissue_dir"]], "plots", snakemake@params[["plots_type"]], sep="/")
+dir.create(PLOTSDIR, recursive = TRUE)
 w <- 1024
 h <- 1024
 p <- 24
@@ -102,16 +101,6 @@ load(snakemake@input[[1]])
   cat("Counts distribution barplot for protein coding biotype and group generated\n")
   # How much sensitivity we loose? 
 
-  ## Saturation plot. 
-  ## We're not getting the saturation plot because it takes too long and doesn't give
-  ## us that useful information.
-  #mysaturation <- dat(mydata, k = 0, ndepth = 7, type = "saturation")
-  #png(paste(PLOTSDIR, "saturation.png", sep="/"), width=w, height=h, pointsize=p)
-  #explo.plot(mysaturation, toplot="protein_coding",
-  #           samples = c(1,3), yleftlim = NULL, yrightlim = NULL)
-  #dev.off()
-  #What about the depth of our samples?
-
 }##########################################
 ## Bias
 ##########################################
@@ -148,14 +137,14 @@ load(snakemake@input[[1]])
   pca.results <- pca.dat@dat$result
   
   ## Variance explained by each component
-  png(file=paste(PLOTSDIR, "pca_variance_raw.png", sep="/"),
+  png(file=paste(PLOTSDIR, "pca_variance.png", sep="/"),
       width = w, height = h, pointsize = p)
   barplot(pca.results$var.exp[,1], xlab = "PC", ylab = "Explained variance")
   dev.off()
-  cat("PCA variance raw plot generated.\n")
+  cat("PCA variance plot generated.\n")
   
   ## Loading plot
-  png(file=paste(PLOTSDIR, "pca_loading_raw.png", sep="/"), 
+  png(file=paste(PLOTSDIR, "pca_loading.png", sep="/"), 
       width = w, height = h, pointsize = p)
   plot(pca.results$loadings[,1:2], col = 1, pch = 20, cex = 0.5,
        xlab = paste("PC 1 ", round(pca.results$var.exp[1,1]*100,0), "%", sep = ""),
@@ -164,14 +153,14 @@ load(snakemake@input[[1]])
        xlim = range(pca.results$loadings[,1:2]) + 0.02*diff(range(pca.results$loadings[,1:2]))*c(-1,1),
        ylim = range(pca.results$loadings[,1:2]) + 0.02*diff(range(pca.results$loadings[,1:2]))*c(-1,1))  
   dev.off()
-  cat("PCA loading raw plot generated.\n")
+  cat("PCA loading plot generated.\n")
   
   ## Score plot
   mycol <- as.character(full$targets$group)
   mycol[mycol == "normal"] <- "black"
   mycol[mycol == "cancer"] <- "red2"
   
-  png(file=paste(PLOTSDIR, "pca_score_raw.png", sep="/"), 
+  png(file=paste(PLOTSDIR, "pca_score.png", sep="/"), 
       width = 2*w, height = h, pointsize = p)
   par(mfrow = c(1,2))
   
@@ -197,5 +186,5 @@ load(snakemake@input[[1]])
   points(pca.results$scores[,1], pca.results$scores[,3], col = mycol, cex = 1.5)
   legend("topright", c("normal", "cancer"), col = c("black", "red2"), ncol = 2, pch = 1)
   dev.off()
-  cat("PCA scores raw plot generated.\n")
+  cat("PCA scores plot generated.\n")
 }
