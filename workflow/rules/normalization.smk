@@ -1,8 +1,26 @@
+rule arsyn:
+    input:
+        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10.RData"
+    output:
+        arsyn_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn.RData",
+        normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_normal.tsv",
+        cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_cancer.tsv",
+        gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
+    params:
+        tissue_dir=get_tissue_dir,
+        step1="{step1}",
+        step2="{step2}",
+        step3="{step3}"
+    log:
+        config['datadir']+"/{tissue}/log/{step1}_{step2}_{step3}_arsyn.log"
+    script:
+        "../scripts/runArsyn.R"
+
 rule user_normalization:
     input:
         config["datadir"]+"/{tissue}/rdata/mean10_protein_coding.RData"
     output:
-        norm_cpm10=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10.RData",
+        norm_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10.RData",
         normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_normal.tsv",
         cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_cancer.tsv",
         gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
@@ -51,3 +69,5 @@ rule filter_low_expression:
         config["datadir"]+"/{tissue}/log/filter_low.log"
     script:
         "../scripts/filterLowExpression.R"
+
+        

@@ -91,7 +91,7 @@ p <- 24
   stopifnot(rownames(full$M) == rownames(full$annot))
   
   cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10.RData", sep = "_"), "\n")
-  save(full, file=snakemake@output[["norm_cpm10"]], compress="xz")
+  save(full, file=snakemake@output[["norm_rdata"]], compress="xz")
   
   cat("Generating data matrices for Aracne\n")
   ## Data matrices for Aracne
@@ -105,18 +105,17 @@ p <- 24
   cancer <- bind_cols(gene=as.character(full$annot$gene_id), cancer)
   
   #gene_ids
-  symbols <- as.character(full$annot$gene_id)
+  symbols <- full$annot %>% select(gene_id)
   
   cat("Saving data\n")
   
   cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10_normal.tsv", sep = "_"), "\n")
-  write.table(normal, file=snakemake@output[["normal_matrix"]], 
-              sep="\t", quote=FALSE, row.names=FALSE)
+  write_tsv(normal, file=snakemake@output[["normal_matrix"]])
+  
   cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10_cancer.tsv", sep = "_"), "\n")
-  write.table(cancer, file=snakemake@output[["cancer_matrix"]], 
-              sep="\t", quote=FALSE, row.names=FALSE)
+  write_tsv(cancer, file=snakemake@output[["cancer_matrix"]])
+  
   cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10_genelist.txt", sep = "_"), "\n")
-  write.table(symbols, file=snakemake@output[["gene_list"]], 
-              sep="\t", quote=FALSE, row.names=FALSE, col.names=FALSE)
+  write_tsv(symbols, file=snakemake@output[["gene_list"]], col_names = F)
 }##########################################
 #########################################
