@@ -9,7 +9,7 @@ include: "rules/common.smk"
 include: "rules/xena.smk"
 include: "rules/qc.smk"
 include: "rules/normalization.smk"
-
+include: "rules/aracne.smk"
 rule all:
     input:
         get_output_files

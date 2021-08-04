@@ -1,6 +1,5 @@
 datadir: /datos/ot/diana/regulacion-trans
 xenadir: xena
-aracnehome: /home/dgarcia/Workspace/regulaciontrans-pipeline/bin/ARACNE
 #bladder, brain, breast, colorectal, esophagus, kidney, liver, lung, pancreas, prostate, skin, thyroid, uterus
 tissues: [uterus]
 xena_tissues: 
@@ -9,3 +8,5 @@ xena_tissues:
   cancer: Skin Cutaneous Melanoma
 xena: [skin, pancreas, esophagus, brain, ovary, testis]
 mccores: 78
+# Aracne image from: https://github.com/ddiannae/ARACNE-multicore
+aracne_singularity: /home/dgarcia/Workspace/aracne-singularity/aracne.sif
