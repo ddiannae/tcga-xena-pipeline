@@ -90,7 +90,7 @@ p <- 24
   stopifnot(nrow(full$M) == nrow(full$annot))
   stopifnot(rownames(full$M) == rownames(full$annot))
   
-  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10.RData", sep = "_"), "\n")
+  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_full.RData", sep = "_"), "\n")
   save(full, file=snakemake@output[["norm_rdata"]], compress="xz")
   
   cat("Generating data matrices for Aracne\n")
@@ -109,13 +109,13 @@ p <- 24
   
   cat("Saving data\n")
   
-  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10_normal.tsv", sep = "_"), "\n")
+  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_normal.tsv", sep = "_"), "\n")
   write_tsv(normal, file=snakemake@output[["normal_matrix"]])
   
-  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10_cancer.tsv", sep = "_"), "\n")
+  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cancer.tsv", sep = "_"), "\n")
   write_tsv(cancer, file=snakemake@output[["cancer_matrix"]])
   
-  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_cpm10_genelist.txt", sep = "_"), "\n")
+  cat("Saving", paste(STEP1, STEP2, STEP3, "norm_genelist.txt", sep = "_"), "\n")
   write_tsv(symbols, file=snakemake@output[["gene_list"]], col_names = F)
 }##########################################
 #########################################

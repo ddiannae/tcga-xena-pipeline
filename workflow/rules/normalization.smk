@@ -1,11 +1,12 @@
 rule arsyn:
     input:
-        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10.RData"
+        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_full.RData",
+        config["datadir"]+"/{tissue}/plots/{step1}_{step2}_{step3}_norm/pca_score.png"
     output:
-        arsyn_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn.RData",
-        normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_normal.tsv",
-        cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_arsyn_cancer.tsv",
-        gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
+        arsyn_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_full.RData",
+        normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_normal.tsv",
+        cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_cancer.tsv",
+        gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_genelist.txt"
     params:
         tissue_dir=get_tissue_dir,
         step1="{step1}",
@@ -20,10 +21,10 @@ rule user_normalization:
     input:
         config["datadir"]+"/{tissue}/rdata/mean10_protein_coding.RData"
     output:
-        norm_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10.RData",
-        normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_normal.tsv",
-        cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_cancer.tsv",
-        gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cpm10_genelist.txt"
+        norm_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_full.RData",
+        normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_normal.tsv",
+        cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cancer.tsv",
+        gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_genelist.txt"
     params:
         tissue_dir=get_tissue_dir,
         step1="{step1}",
