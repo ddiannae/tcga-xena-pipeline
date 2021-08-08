@@ -6,52 +6,18 @@ min_version("5.12.0")
 configfile: "config/config.yaml"
 
 include: "rules/common.smk"
-include: "rules/xena.smk"
-include: "rules/qc.smk"
-include: "rules/normalization.smk"
 include: "rules/aracne.smk"
+include: "rules/normalization.smk"
+include: "rules/qc.smk"
+include: "rules/raw.smk"
+include: "rules/xena.smk"
+include: "rules/gdc.smk"
+
+
+wildcard_constraints:
+    tissue="[A-Za-z]+",
+    type="normal|cancer"
 
 rule all:
     input:
         get_output_files
-
-## Needs tons of refactor
-rule download_files_and_get_ascat_matrix:
-    input: getRawMatrixInput
-    output: 
-        config["datadir"]+"/{tissue}/{tissue}-matrix.tsv",
-        config["datadir"]+"/{tissue}/{tissue}-samples.tsv",
-        config["datadir"]+"/{tissue}/rdata/raw_full.RData"
-    params:
-        normaldir=config["datadir"]+"/{wildcards.tissue}/raw/{wildcards.tissue}-normal-rna",
-        cancerdir=config["datadir"]+"/{wildcards.tissue}/raw/{wildcards.tissue}-cancer-rna",
-        tissuedir=config["datadir"]+"/{wildcards.tissue}",
-        logdir=config["datadir"]+"/{wildcards.tissue}/log",
-        logfile=config["datadir"]+"/{wildcards.tissue}/log/get-matrix.log",
-        normaltissue=getNormalTissue,
-        cancertissue=getCancerTissue
-    run: 
-        if wildcards.tissue not in config["xena"]:
-            shell(f'mkdir -p {params.normaldir}')
-            shell(f'mkdir -p {params.cancerdir}')
-            shell(f'./bin/gdc-client download -d {params.normaldir} -m {input[0]} --retry-amount 3')
-            shell(f'./bin/gdc-client download -d {params.cancerdir} -m {input[1]} --retry-amount 3')
-            shell(f'Rscript src/getRawMatrices.R {wildcards.tissue} {params.tissuedir} > {params.logfile}')
-        else:
-            shell(f'mkdir -p {params.tissuedir}')
-            shell(f'mkdir -p {params.logdir}')
-            shell(f'Rscript src/getRawXENAMatrices.R {input[0]} {input[1]} {input[2]} {wildcards.tissue} "{params.normaltissue}" "{params.cancertissue}" {params.tissuedir} {config["mccores"]} > {params.logfile}') 
-
-rule get_manifest:
-    output:
-        ## Example: data/breast/manifests/breast-cancer-rna_counts.txt"
-        config["datadir"]+"/{tissue}/manifests/{tissue}-{type}-rna_counts.txt"
-    params:
-        logdir=config["datadir"]+"/{wildcards.tissue}/log",
-        manidir=config["datadir"]+"/{wildcards.tissue}/manifests"
-    shell:
-        """
-        mkdir -p {params.logdir}
-        mkdir -p {params.manidir}
-        python src/queryGDC.py {wildcards.tissue} {wildcards.type} {params.manidir} false 
-        """
