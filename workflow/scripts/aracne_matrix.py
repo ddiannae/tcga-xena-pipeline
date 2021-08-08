@@ -7,7 +7,7 @@ sys.stderr = open(snakemake.log[0], "w")
 exp_matrix = snakemake.input[0]
 outmatrix = snakemake.output[0]
 outdir = snakemake.params[0] + "/networks/output"
-procs = snakemake.params[1]
+procs = int(snakemake.threads[0])
 
 pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)
     
