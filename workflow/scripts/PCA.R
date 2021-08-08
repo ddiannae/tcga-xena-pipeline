@@ -14,7 +14,6 @@ w <- 1024
 h <- 1024
 p <- 24
 
-
 PLOTSDIR <-paste(snakemake@params[["tissue_dir"]], "plots", 
                  snakemake@params[["plots_type"]], sep="/")
 dir.create(PLOTSDIR, recursive = TRUE)

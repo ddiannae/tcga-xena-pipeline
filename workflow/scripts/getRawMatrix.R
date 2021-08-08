@@ -26,7 +26,7 @@ library(rtracklayer)
 TISSUE <- snakemake@params[["tissue"]]
 TYPE <-  snakemake@params[["type"]]
 IS_XENA <- snakemake@params[["is_xena"]]
-MCCORES <- snakemake@params[["mccores"]]
+MCCORES <- as.numeric(snakemake@threads[[1]])
 # ###############################################################################
 # ## Get and check count matrices
 # ## 1. Find files
