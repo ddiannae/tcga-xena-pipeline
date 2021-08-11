@@ -51,10 +51,12 @@ rule normalization_test:
     input:
         config["datadir"]+"/{tissue}/rdata/mean10_protein_coding.RData",
     output:
-        config["datadir"]+"/{tissue}/rdata/normalization_results.tsv"
+        results=config["datadir"]+"/{tissue}/rdata/normalization_results.tsv",
+        gc_norms=config["datadir"]+"/{tissue}/rdata/gc_norms.RData",
+        ln_norms=config["datadir"]+"/{tissue}/rdata/ln_norms.RData"
     params:
         tissue_dir=get_tissue_dir,
-        mccores=config["mccores"]
+    threads: 25
     log:
         config['datadir']+"/{tissue}/log/normalization_test.log"
     script:
@@ -63,7 +65,8 @@ rule normalization_test:
 rule filter_low_expression:
     input:
         config["datadir"]+"/{tissue}/rdata/raw_full.RData",
-        config["datadir"]+"/{tissue}/plots/raw/pca_score.png"
+        config["datadir"]+"/{tissue}/plots/raw/pca_score.png",
+        config["datadir"]+"/{tissue}/plots/raw/rna_composition.png"
     output:
         config["datadir"]+"/{tissue}/rdata/mean10_protein_coding.RData"
     log:

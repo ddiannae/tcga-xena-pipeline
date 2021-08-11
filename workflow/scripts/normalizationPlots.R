@@ -78,13 +78,21 @@ p <- 24
                          ln <- df_normalizations[i, "ln"]
                          bn <- df_normalizations[i, "bn"]
                          
-                         savePlots(paste("gc", gcn, sep = "_"), 
-                                   paste("length", ln, sep = "_"), 
-                                   paste("between", bn, sep =  "_"))
+                         tryCatch(expr = {
+                           savePlots(paste("gc", gcn, sep = "_"), 
+                                     paste("length", ln, sep = "_"), 
+                                     paste("between", bn, sep =  "_"))
+                         }, error = function(cond){
+                           cat(cond$message, "\n")
+                         })
                          
-                         savePlots(paste("length", ln, sep = "_"), 
-                                   paste("gc", gcn, sep = "_"), 
-                                   paste("between", bn, sep =  "_"))
+                         tryCatch(expr = {
+                           savePlots(paste("length", ln, sep = "_"), 
+                                     paste("gc", gcn, sep = "_"), 
+                                     paste("between", bn, sep =  "_"))
+                         }, error = function(cond){
+                           cat(cond$message, "\n")
+                         })
                        })
   
   pngPlots <- list.files(path = PLOTSNORMDIR, pattern = "*.png", full.names = TRUE)

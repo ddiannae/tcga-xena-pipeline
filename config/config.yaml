@@ -1,12 +1,26 @@
 datadir: /datos/ot/diana/regulacion-trans
 xenadir: xena
 #bladder, brain, breast, colorectal, esophagus, kidney, liver, lung, pancreas, prostate, skin, thyroid, uterus
-tissues: [uterus]
-xena_tissues: 
+tissues: [bladder, breast, colorectal, kidney, liver, lung, prostate, thyroid, uterus]
+xena_tissues:
 - name: skin
   normal: Skin - Not Sun Exposed (Suprapubic)
   cancer: Skin Cutaneous Melanoma
+- name: pancreas
+  normal: Pancreas
+  cancer: Pancreatic Adenocarcinoma
+- name: esophagus
+  normal: Esophagus - Mucosa
+  cancer: Esophageal Carcinoma
+- name: brain
+  normal: Brain - Cortex
+  cancer: Brain Lower Grade Glioma
+- name: ovary
+  normal: Ovary
+  cancer: Ovarian Serous Cystadenocarcinoma
+- name: testis
+  normal: Testis
+  cancer: Testicular Germ Cell Tumor
 xena: [skin, pancreas, esophagus, brain, ovary, testis]
-mccores: 78
 # Aracne image from: https://github.com/ddiannae/ARACNE-multicore
 aracne_singularity: /home/dgarcia/Workspace/aracne-singularity/aracne.sif

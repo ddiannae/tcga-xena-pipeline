@@ -26,9 +26,17 @@ load(snakemake@input[[1]])
   cat("There are", egtable[[1]], "genes with mean expression count < 10", egtable[[2]], "with mean count > 10 \n")
   exp_genes <- names(exp_genes[exp_genes == TRUE])
 
+  non_zero_genes <- apply(full$M, 1, function(x) sum(x == 0) < ncol(full$M)/2)
+  egtable <- table(non_zero_genes)
+  cat("There are", egtable[[1]], "genes with 0 values in more than 50% samples", egtable[[2]], 
+      " genes with 0 values in less than 50% samples \n")
+  non_zero_genes <- names(non_zero_genes[non_zero_genes == TRUE])
+  
+  genes_pass <- intersect(exp_genes, non_zero_genes)
+  
   ##Filtering low expression genes
-  mean10 <- list(M = full$M[exp_genes, full$targets$id],
-                 annot = full$annot %>% filter(gene_id %in% exp_genes),
+  mean10 <- list(M = round(full$M[genes_pass, full$targets$id]),
+                 annot = full$annot %>% filter(gene_id %in% genes_pass),
                  targets = full$targets)
                  
   mean10$annot <- mean10$annot %>% arrange(gene_id)
