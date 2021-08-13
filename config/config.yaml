@@ -24,3 +24,4 @@ xena_tissues:
 xena: [skin, pancreas, esophagus, brain, ovary, testis]
 # Aracne image from: https://github.com/ddiannae/ARACNE-multicore
 aracne_singularity: /home/dgarcia/Workspace/aracne-singularity/aracne.sif
+end: "qc"

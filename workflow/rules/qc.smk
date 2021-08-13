@@ -25,3 +25,17 @@ rule pca:
         config["datadir"]+"/{tissue}/log/{plots_type}_pca.log"
     script:
         "../scripts/PCA.R"
+
+rule density:
+    input:
+        config["datadir"]+"/{tissue}/rdata/{plots_type}_full.RData",
+        config["datadir"]+"/{tissue}/plots/{plots_type}/pca_score.png"
+    output:
+        outliers=config["datadir"]+"/{tissue}/rdata/{plots_type}_outliers.tsv",
+        density=config["datadir"]+"/{tissue}/plots/{plots_type}/density.png"
+    params:
+        tissue="{tissue}"
+    log:
+        config["datadir"]+"/{tissue}/log/{plots_type}_density.log"
+    script:
+        "../scripts/densityPlot.R"

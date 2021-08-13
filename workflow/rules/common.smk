@@ -1,10 +1,17 @@
+import glob
+
 def get_output_files(wildcards):
     files = []
-    for t in config["xena_tissues"]:
-        files.append(config["datadir"]+"/"+t["name"]+"/plots/normalization_plots.pdf")
-    for t in config["tissues"]:
-        files.append(config["datadir"]+"/"+t+"/plots/normalization_plots.pdf")
+    if config["end"] == "qc":
+        for t in config["xena_tissues"]:
+            files.append(config["datadir"]+"/"+t["name"]+"/rdata/raw_outliers.tsv")
+        for t in config["tissues"]:
+            files.append(config["datadir"]+"/"+t+"/rdata/raw_outliers.tsv")
     return files
+
+def get_expr_matrix(wildcards):
+        return [file for file in glob.glob(f'{config["datadir"]}/{wildcards.tissue}/rdata/*_*_*_norm_cpm10_arsyn_{wildcards.type}.tsv')][0]
+
 
 def get_xena_dir(wildcards):
     return f'{config["datadir"]}/{config["xenadir"]}'
