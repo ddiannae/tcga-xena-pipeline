@@ -1,9 +1,9 @@
 rule join_and_annotate:
     input: unpack(get_annot_input)
     output:
-        annot_tsv = config["datadir"]+"/{tissue}/{tissue}-annotation.tsv",
+        annot_tsv = config["datadir"]+"/{tissue}/results/{tissue}-annotation.tsv",
         annot_rdata = config["datadir"]+"/{tissue}/rdata/annot.RData",
-        raw_rdata=config["datadir"]+"/{tissue}/rdata/raw_full.RData"
+        raw_rdata=config["datadir"]+"/{tissue}/rdata/raw_full_unfiltered.RData"
     log:
         config['datadir']+"/{tissue}/log/join_annotate.log"
     params:
@@ -15,8 +15,8 @@ rule join_and_annotate:
 rule get_raw_matrix:
     input: get_raw_matrix_input
     output: 
-        matrix = config["datadir"]+"/{tissue}/{tissue}-{type}-matrix.tsv",
-        samples = config["datadir"]+"/{tissue}/{tissue}-{type}-samples.tsv",
+        matrix = config["datadir"]+"/{tissue}/results/{tissue}-{type}-matrix.tsv",
+        samples = config["datadir"]+"/{tissue}/results/{tissue}-{type}-samples.tsv",
     params:
         tissue_dir=get_tissue_dir,
         tissue="{tissue}",

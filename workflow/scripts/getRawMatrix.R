@@ -36,6 +36,9 @@ MCCORES <- as.numeric(snakemake@threads[[1]])
 # ## 6. Build target matrix
 # ###############################################################################
 
+RDATADIR <- paste(snakemake@params[["tissue_dir"]], "results", sep="/")
+dir.create(RDATADIR)
+
 if(!IS_XENA) {
   
   RAWDIR <- paste(snakemake@params[["tissue_dir"]], "raw", sep="/")

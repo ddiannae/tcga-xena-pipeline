@@ -4,9 +4,14 @@ def get_output_files(wildcards):
     files = []
     if config["end"] == "qc":
         for t in config["xena_tissues"]:
-            files.append(config["datadir"]+"/"+t["name"]+"/rdata/raw_outliers.tsv")
+            files.append(config["datadir"]+"/"+t["name"]+"/rdata/raw.RData")
         for t in config["tissues"]:
-            files.append(config["datadir"]+"/"+t+"/rdata/raw_outliers.tsv")
+            files.append(config["datadir"]+"/"+t+"/rdata/raw.RData")
+    elif config["end"] == "norm_test":
+        for t in config["xena_tissues"]:
+            files.append(config["datadir"]+"/"+t["name"]+"/plots/normalization_plots.pdf")
+        for t in config["tissues"]:
+            files.append(config["datadir"]+"/"+t+"/plots/normalization_plots.pdf")
     return files
 
 def get_expr_matrix(wildcards):
@@ -30,7 +35,7 @@ def get_raw_matrix_input(wildcards):
         return f'{config["datadir"]}/{wildcards.tissue}/raw/{wildcards.type}/downloads_done.txt'
         
 def get_annot_input(wildcards):
-    preffix = f'{config["datadir"]}/{wildcards.tissue}/{wildcards.tissue}'
+    preffix = f'{config["datadir"]}/{wildcards.tissue}/results/{wildcards.tissue}'
     input = {
     "normal_targets": f'{preffix}-normal-samples.tsv',
     "cancer_targets": f'{preffix}-cancer-samples.tsv',

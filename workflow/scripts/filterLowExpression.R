@@ -35,22 +35,22 @@ load(snakemake@input[[1]])
   genes_pass <- intersect(exp_genes, non_zero_genes)
   
   ##Filtering low expression genes
-  mean10 <- list(M = round(full$M[genes_pass, full$targets$id]),
+  full <- list(M = round(full$M[genes_pass, full$targets$id]),
                  annot = full$annot %>% filter(gene_id %in% genes_pass),
                  targets = full$targets)
                  
-  mean10$annot <- mean10$annot %>% arrange(gene_id)
-  mean10$M <- mean10$M[order(row.names(mean10$M)), mean10$targets$id]
+  full$annot <- full$annot %>% arrange(gene_id)
+  full$M <- full$M[order(row.names(full$M)), full$targets$id]
   
-  stopifnot(all(mean10$annot$gene_id == rownames(mean10$M)))
+  stopifnot(all(full$annot$gene_id == rownames(full$M)))
   cat(paste0("Genes in matrix and annotation match positions \n"))
   
-  stopifnot(all(mean10$targets$id == colnames(mean10$M)))
+  stopifnot(all(full$targets$id == colnames(full$M)))
   cat(paste0("Samples in matrix and annotation match positions \n"))
   
-  row.names(mean10$annot) <- mean10$annot$gene_id
+  row.names(full$annot) <- full$annot$gene_id
   
-  cat("Saving mean10_protein_coding.RData \n") 
-  save(mean10, file=snakemake@output[[1]], compress="xz")
+  cat("Saving full_filtered.RData \n") 
+  save(full, file=snakemake@output[[1]], compress="xz")
 }
 ###########################################################################
