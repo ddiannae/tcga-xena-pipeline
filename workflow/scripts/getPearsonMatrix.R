@@ -1,11 +1,15 @@
+log <- file(snakemake@log[[1]], open="wt")
+sink(log)
+sink(log, type="message")
+
 library(data.table)
 library(dplyr)
 library(magick)
 library(ComplexHeatmap)
 
 cat("Reading matrix \n")
-expr_file <- "/datos/ot/diana/regulacion-trans-take1/prostate/rdata/gc-full_length-no_tmm_norm_cpm10_arsyn_cancer.tsv"
-annot_file <- "/datos/ot/diana/regulacion-trans-take1/prostate/rdata/annot.RData"
+expr_file <- snakemake@input[["expr_matrix"]]
+annot_file <-  snakemake@input[["annot"]]
 
 cat("Getting annotations \n")
 chr_pal <- c("#D909D1", "#0492EE", "#D2656C", "#106F35", "#5BD2AE", "#199F41", 
@@ -45,11 +49,15 @@ ha <- rowAnnotation(df = chrs,
 
 ht <- Heatmap(corr, cluster_rows = F, cluster_columns = F, show_row_names = F, 
         show_column_names = F,  heatmap_legend_param = list( title_gp = gpar(fontsize = 14),
-                                                             title = "Pearson Correlation",
+                                                             title = "Pearson \nCorrelation",
                                                              legend_height = unit(4, "cm")), 
         right_annotation = ha)
 
 cat("Saving image \n")
-png("/datos/ot/diana/regulacion-trans-take1/prostate/plots/cancer_heatmap.png", width = 1200, height = 1200)
+png(snakemake@output[["plot"]], width = 1200, height = 1200)
 draw(ht, heatmap_legend_side = "right", annotation_legend_side = "right")
 dev.off()
+
+colnames(corr) <- genes
+corr[lower.tri(corr)] <- NA
+fwrite(corr, file=snakemake@output[["csv"]])
