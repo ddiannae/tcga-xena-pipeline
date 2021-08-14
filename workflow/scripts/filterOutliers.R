@@ -10,15 +10,15 @@ load(snakemake@input[[1]])
 outliers <- read_tsv(snakemake@input[["outliers"]])
 
 cat(nrow(outliers), " outliers will be removed.\n")
-target <- full$targets %>% 
+targets <- full$targets %>% 
   filter(!id %in% (outliers %>% pull(sample)))
 
-M <- full$M[, target %>% pull(id)]
+M <- full$M[, targets %>% pull(id)]
 
-full <- list(annot = full$annot, M = M, target = target)
+full <- list(annot = full$annot, M = M, targets = targets)
 
-dimcancer <- nrow(full$target %>% filter(group == "cancer"))
-dimnormal <- nrow(full$target %>% filter(group == "normal"))
+dimcancer <- nrow(full$targets %>% filter(group == "cancer"))
+dimnormal <- nrow(full$targets %>% filter(group == "normal"))
 cat("Final dimensions: ", dimcancer, " cancer and ", dimnormal,
 " normal samples \n")
 
