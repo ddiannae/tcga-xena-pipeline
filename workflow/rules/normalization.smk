@@ -27,12 +27,12 @@ rule normalization_test:
  
 rule user_normalization:
     input:
-        config["datadir"]+"/{tissue}/rdata/mean10_protein_coding.RData"
+        config["datadir"]+"/{tissue}/rdata/raw.RData"
     output:
         norm_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_full.RData",
-        normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_normal.tsv",
-        cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_cancer.tsv",
-        gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_genelist.txt"
+        normal_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_normal.tsv",
+        cancer_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_cancer.tsv",
+        gene_list=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_genelist.txt"
     params:
         tissue_dir=get_tissue_dir,
         step1="{step1}",
@@ -49,9 +49,9 @@ rule arsyn:
         config["datadir"]+"/{tissue}/plots/{step1}_{step2}_{step3}_norm/pca_score.png"
     output:
         arsyn_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_full.RData",
-        normal_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_normal.tsv",
-        cancer_matrix=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_cancer.tsv",
-        gene_list=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_genelist.txt"
+        normal_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_arsyn_normal.tsv",
+        cancer_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_arsyn_cancer.tsv",
+        gene_list=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_arsyn_genelist.txt"
     params:
         tissue_dir=get_tissue_dir,
         step1="{step1}",

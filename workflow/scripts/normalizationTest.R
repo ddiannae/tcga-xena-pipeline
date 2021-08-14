@@ -34,6 +34,7 @@ MCCORES <- as.numeric(snakemake@threads[[1]])
 PLOTSDIR <-paste(snakemake@params[["tissue_dir"]], "plots", sep="/")
 PLOTSNORMDIR <- paste(PLOTSDIR, "normalization", sep = "/")
 dir.create(PLOTSNORMDIR)
+
 w <- 1024
 h <- 1024
 p <- 24
@@ -41,12 +42,12 @@ p <- 24
 load(snakemake@input[[1]])
 
 cat("Testing normalization methods\n.")
-mydataM10EDA <- EDASeq::newSeqExpressionSet(
-  counts = mean10$M,
-  featureData = mean10$annot %>% as.data.frame(),
+rawEDA <- EDASeq::newSeqExpressionSet(
+  counts = full$M,
+  featureData = full$annot %>% as.data.frame(),
   phenoData = data.frame(
-    conditions = mean10$targets$group,
-    row.names = mean10$targets$id))
+    conditions = full$targets$group,
+    row.names = full$targets$id))
 
 length_norm <- c("no", "full", "loess", "median", "upper")
 gc_norm <- c("no", "full", "loess", "median", "upper")
@@ -144,15 +145,15 @@ gc_norms <- mclapply(X = 1:nrow(df_normalizations),
       expr = {
         
         if(gcn == "no") {
-          gcn_data <- counts(mydataM10EDA)
+          gcn_data <- counts(rawEDA)
         } else {
-          gcn_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$gc, which = gcn)  
+          gcn_data <- withinLaneNormalization(counts(rawEDA), full$annot$gc, which = gcn)  
         }
         
         if(ln == "no") {
           ln_data <- gcn_data
         } else {
-          ln_data <- withinLaneNormalization(gcn_data, mean10$annot$length, which = ln)
+          ln_data <- withinLaneNormalization(gcn_data, full$annot$length, which = ln)
         }
         
         if (bn == "no") {
@@ -164,7 +165,7 @@ gc_norms <- mclapply(X = 1:nrow(df_normalizations),
         }
         cat("Testing with GC normalization: ", gcn, ", length normalization: ", ln, " and between lane normalization: ", bn, "\n")
         norm_noiseq_results <- getNOISeqResults(paste("gc", gcn, sep = "_"), paste("length", ln, sep = "_"), paste("between", bn, sep =  "_"), 
-                                                between_data, mean10)
+                                                between_data, full)
         return(norm_noiseq_results)
       },
       error = function(cond) {
@@ -195,25 +196,27 @@ ln_norms <- mclapply(X = 1:nrow(df_normalizations),
       expr = {
         
         if(ln == "no") {
-          ln_data <- counts(mydataM10EDA)
+          ln_data <- counts(rawEDA)
         } else {
-          ln_data <- withinLaneNormalization(counts(mydataM10EDA), mean10$annot$length, which = ln)
+          ln_data <- withinLaneNormalization(counts(rawEDA), full$annot$length, which = ln)
         }
         
         if(gcn == "no") {
           gcn_data <- ln_data
         } else {
-          gcn_data <- withinLaneNormalization(ln_data, mean10$annot$gc, which = gcn)
+          gcn_data <- withinLaneNormalization(ln_data, full$annot$gc, which = gcn)
         }
         
-        if (bn == "tmm") {
+        if (bn == "no") {
+          between_data <- ln_data
+        } else if (bn == "tmm") {
           between_data <- tmm(ln_data, long = 1000, lc = 0, k = 0)
         } else {
           between_data <- betweenLaneNormalization(ln_data, which = bn, offset = FALSE)
         }
         cat("Testing with length normalization: ", ln, "GC normalization: ", gcn, " and between lane normalization: ", bn, "\n")
         norm_noiseq_results <- getNOISeqResults(paste("length", ln, sep = "_"), paste("gc", gcn, sep = "_"), paste("between", bn, sep =  "_"), 
-                                                between_data, mean10)
+                                                between_data, full)
         return(norm_noiseq_results)
       },
       error = function(cond) {

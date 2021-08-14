@@ -43,7 +43,7 @@ p <- 24
   
   length_norm <- c("no","full", "loess", "median", "upper")
   gc_norm <- c("no", "full", "loess", "median", "upper")
-  between_norm <- c("full", "median", "tmm", "upper")
+  between_norm <- c("no", "full", "median", "tmm", "upper")
   
   ## This function will retrieve plots for one normalization set and will create 
   ## one single plot
@@ -58,7 +58,8 @@ p <- 24
       rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
     })
     
-    png(paste(PLOTSNORMDIR, paste(plotname, "png", sep ="."), sep="/"),  height=h/2, width=w*(3/2))
+    plotpath <- paste(PLOTSNORMDIR, paste(plotname, "png", sep ="."), sep="/")
+    png(plotpath,  height=h/2, width=w*(3/2))
     par(oma = c(0, 0, 1.5, 0))
     plot.new()
     do.call(grid.arrange, c(thePlots,  ncol = 3, nrow=1))
@@ -66,6 +67,7 @@ p <- 24
     dev.off()
 
     unlink(pngPlots)
+    return(plotpath)
   } 
   
   df_normalizations <- expand.grid(gcn = gc_norm, ln = length_norm, 
@@ -77,27 +79,29 @@ p <- 24
                          gcn <- df_normalizations[i, "gcn"]
                          ln <- df_normalizations[i, "ln"]
                          bn <- df_normalizations[i, "bn"]
-                         
+                         gcp <- NA
                          tryCatch(expr = {
-                           savePlots(paste("gc", gcn, sep = "_"), 
+                           gcp <- savePlots(paste("gc", gcn, sep = "_"), 
                                      paste("length", ln, sep = "_"), 
                                      paste("between", bn, sep =  "_"))
                          }, error = function(cond){
+                          
                            cat(cond$message, "\n")
                          })
-                         
+                         lp <- NA
                          tryCatch(expr = {
-                           savePlots(paste("length", ln, sep = "_"), 
+                           lp <- savePlots(paste("length", ln, sep = "_"), 
                                      paste("gc", gcn, sep = "_"), 
                                      paste("between", bn, sep =  "_"))
                          }, error = function(cond){
                            cat(cond$message, "\n")
                          })
-                       })
+              return(list(gcp, lp))         
+          })
   
-  pngPlots <- list.files(path = PLOTSNORMDIR, pattern = "*.png", full.names = TRUE)
-
-  thePlots <- lapply (pngPlots, function(pngFile) {
+  plots <- unlist(plots)
+  
+  thePlots <- lapply (plots, function(pngFile) {
     rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
   })
   

@@ -41,31 +41,33 @@ p <- 24
   
   if(first[1] == "length") {
     if(first[2] != "no") {
-      norm_counts <- withinLaneNormalization(mean10$M, mean10$annot$length, which = first[2])  
+      norm_counts <- withinLaneNormalization(full$M, full$annot$length, which = first[2])  
     } else {
-      norm_counts <- mean10$M
+      norm_counts <- full$M
     }
     if(second[1] == "gc") {
       if(second[2] != "no") {
-        norm_counts <- withinLaneNormalization(norm_counts, mean10$annot$gc, which = second[2])    
+        norm_counts <- withinLaneNormalization(norm_counts, full$annot$gc, which = second[2])    
       }
     }
   } else if (first[1] == "gc") {
     if(first[2] != "no") {
-      norm_counts <- withinLaneNormalization(mean10$M, mean10$annot$gc, which = first[2])
+      norm_counts <- withinLaneNormalization(full$M, full$annot$gc, which = first[2])
     } else {
-      norm_counts <- mean10$M
+      norm_counts <- full$M
     }
     if(second[1] == "length") {
       if(second[2] != "no") {
-        norm_counts <- withinLaneNormalization(norm_counts, mean10$annot$length, which = second[2])  
+        norm_counts <- withinLaneNormalization(norm_counts, full$annot$length, which = second[2])  
       }
     }
   } else {
-    norm_counts <- mean10$M
+    norm_counts <- full$M
   }
 
-  if (STEP3 == "tmm") {
+  if(STEP3 == "no") {
+    norm_counts <- full$M
+  } else if (STEP3 == "tmm") {
     norm_counts <- tmm(norm_counts, long = 1000, lc = 0, k = 0)
   } else {
     norm_counts <- betweenLaneNormalization(norm_counts, which = STEP3, offset = FALSE)
@@ -73,7 +75,6 @@ p <- 24
   cat("Normalization done. Step1: ", STEP1, ", Step2: ", STEP2, " Step3: ", STEP3, "\n")
   
   # Saving normalized data
-  full <- mean10
   full$M <- norm_counts
   
   norm_data_cpm10 <- filtered.data(full$M, factor=full$targets$group, 
