@@ -99,7 +99,7 @@ p <- 24
               return(list(gcp, lp))         
           })
   
-  plots <- unlist(plots)
+  plots <- sort(unlist(plots))
   
   thePlots <- lapply (plots, function(pngFile) {
     rasterGrob(readPNG(pngFile, native = FALSE), interpolate = FALSE)
