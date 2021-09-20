@@ -3,20 +3,18 @@ import glob
 def get_output_files(wildcards):
     files = []
     if config["end"] == "qc":
-        for t in config["xena_tissues"]:
+        for t in config["tissues"]:
             files.append(config["datadir"]+"/"+t["name"]+"/rdata/raw.RData")
-        for t in config["tissues"]:
-            files.append(config["datadir"]+"/"+t+"/rdata/raw.RData")
     elif config["end"] == "norm_test":
-        for t in config["xena_tissues"]:
-            files.append(config["datadir"]+"/"+t["name"]+"/plots/normalization_plots.pdf")
         for t in config["tissues"]:
-            files.append(config["datadir"]+"/"+t+"/plots/normalization_plots.pdf")
+            files.append(config["datadir"]+"/"+t["name"]+"/plots/normalization_plots.pdf")
+    elif config["end"] == "correlation":
+        for t in config["tissues"]:
+            files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_no-arsyn_cancer_mi.adj")
+            files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_no-arsyn_normal_mi.adj")
+            #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_arsyn_normal_pearson.tsv")
+            #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_arsyn_cancer_pearson.tsv")
     return files
-
-def get_expr_matrix(wildcards):
-        return [file for file in glob.glob(f'{config["datadir"]}/{wildcards.tissue}/rdata/*_*_*_norm_cpm10_arsyn_{wildcards.type}.tsv')][0]
-
 
 def get_xena_dir(wildcards):
     return f'{config["datadir"]}/{config["xenadir"]}'
