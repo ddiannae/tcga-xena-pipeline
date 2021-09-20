@@ -29,15 +29,16 @@ rule user_normalization:
     input:
         config["datadir"]+"/{tissue}/rdata/raw.RData"
     output:
-        norm_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_full.RData",
-        normal_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_normal.tsv",
-        cancer_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_cancer.tsv",
-        gene_list=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_genelist.txt"
+        norm_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_no-arsyn_full.RData",
+        normal_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_no-arsyn_normal.tsv",
+        cancer_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_no-arsyn_cancer.tsv",
+        gene_list=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_no-arsyn_genelist.txt"
     params:
         tissue_dir=get_tissue_dir,
         step1="{step1}",
         step2="{step2}",
-        step3="{step3}"
+        step3="{step3}",
+        xena=is_xena_tissue
     log:
         config['datadir']+"/{tissue}/log/{step1}_{step2}_{step3}_normalization.log"
     script:
@@ -45,13 +46,13 @@ rule user_normalization:
 
 rule arsyn:
     input:
-        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_full.RData",
-        config["datadir"]+"/{tissue}/plots/{step1}_{step2}_{step3}_norm/pca_score.png"
+        config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_no-arsyn_full.RData",
+        config["datadir"]+"/{tissue}/plots/{step1}_{step2}_{step3}_no-arsyn/density.png"
     output:
-        arsyn_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_norm_arsyn_full.RData",
-        normal_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_arsyn_normal.tsv",
-        cancer_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_arsyn_cancer.tsv",
-        gene_list=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_norm_arsyn_genelist.txt"
+        arsyn_rdata=config["datadir"]+"/{tissue}/rdata/{step1}_{step2}_{step3}_si-arsyn_full.RData",
+        normal_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_si-arsyn_normal.tsv",
+        cancer_matrix=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_si-arsyn_cancer.tsv",
+        gene_list=config["datadir"]+"/{tissue}/results/{step1}_{step2}_{step3}_si-arsyn_genelist.txt"
     params:
         tissue_dir=get_tissue_dir,
         step1="{step1}",
