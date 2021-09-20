@@ -25,6 +25,7 @@ library(DESeq2)
 STEP1 = snakemake@params[["step1"]]
 STEP2 = snakemake@params[["step2"]]
 STEP3 = snakemake@params[["step3"]]
+is_xena = snakemake@params[["xena"]]
 
 RDATA <-paste(snakemake@params[["tissue_dir"]], "rdata", sep="/")
 w <- 1024
@@ -84,9 +85,22 @@ p <- 24
   cat("After normalization. There are", filtered, "genes with counts per million mean < 10", 
       nrow(norm_data_cpm10), "with counts per million mean > 10 \n")
   
+  ### There is a problem with xena expression matrix. Values for
+  ### genes "ENSG00000203811.1" and "ENSG00000203852.3" are exactly
+  ### the same and it affects correlation calculation
+  if(is_xena) {
+    genes <- rownames(norm_data_cpm10)
+    if("ENSG00000203811.1" %in% genes){
+      genes <- genes[genes != "ENSG00000203811.1"]
+      norm_data_cpm10 <- norm_data_cpm10[genes,]
+    }
+  }
+  
   full <-list(M = norm_data_cpm10, 
                     annot = full$annot %>% filter(gene_id %in% rownames(norm_data_cpm10)),
                     targets = full$targets)
+  
+  
   
   stopifnot(nrow(full$M) == nrow(full$annot))
   stopifnot(rownames(full$M) == rownames(full$annot))
