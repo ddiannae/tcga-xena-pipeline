@@ -1,27 +1,84 @@
 datadir: /datos/ot/diana/regulacion-trans
 xenadir: xena
 #bladder, brain, breast, colorectal, esophagus, kidney, liver, lung, pancreas, prostate, skin, thyroid, uterus
-tissues: [bladder, breast, colorectal, kidney, liver, lung, prostate, thyroid, uterus]
-xena_tissues:
-- name: skin
-  normal: Skin - Not Sun Exposed (Suprapubic)
-  cancer: Skin Cutaneous Melanoma
-- name: pancreas
-  normal: Pancreas
-  cancer: Pancreatic Adenocarcinoma
-- name: esophagus
-  normal: Esophagus - Mucosa
-  cancer: Esophageal Carcinoma
+tissues:
+- name: bladder
+  step1: gc-upper
+  step2: length-full
+  step3: tmm
 - name: brain
   normal: Brain - Cortex
   cancer: Brain Lower Grade Glioma
+  step1: gc-upper
+  step2: length-full
+  step3: tmm
+- name: breast
+  step1: gc-upper
+  step2: length-no
+  step3: tmm
+- name: colorectal
+  step1: gc-full
+  step2: length-full
+  step3: tmm
+- name: esophagus
+  normal: Esophagus - Mucosa
+  cancer: Esophageal Carcinoma
+  step1: gc-upper
+  step2: length-full
+  step3: tmm
+- name: kidney
+  step1: gc-upper
+  step2: length-no
+  step3: tmm
+- name: liver
+  normal: Liver
+  cancer: Liver Hepatocelullar Carcinoma
+  step1: gc-loess
+  step2: length-full
+  step3: tmm
+- name: lung
+  step1: length-full
+  step2: gc-median
+  step3: tmm
 - name: ovary
   normal: Ovary
   cancer: Ovarian Serous Cystadenocarcinoma
+  step1: gc-full
+  step2: length-full
+  step3: tmm
+- name: pancreas
+  normal: Pancreas
+  cancer: Pancreatic Adenocarcinoma
+  step1: gc-upper
+  step2: length-median
+  step3: tmm
+- name: prostate
+  normal: Prostate
+  cancer: Prostate Adenocarcinoma
+  step1: gc-upper
+  step2: length-median
+  step3: tmm
+- name: skin
+  normal: Skin - Not Sun Exposed (Suprapubic)
+  cancer: Skin Cutaneous Melanoma
+  step1: gc-upper
+  step2: length-full
+  step3: tmm
 - name: testis
   normal: Testis
   cancer: Testicular Germ Cell Tumor
-xena: [skin, pancreas, esophagus, brain, ovary, testis]
+  step1: gc-upper
+  step2: length-full
+  step3: tmm
+- name: thyroid
+  step1: gc-full
+  step2: length-full
+  step3: tmm
+- name: uterus
+  step1: gc-full
+  step2: length-no
+  step3: tmm
+xena: [skin, pancreas, esophagus, brain, ovary, testis, prostate]
 # Aracne image from: https://github.com/ddiannae/ARACNE-multicore
 aracne_singularity: /home/dgarcia/Workspace/aracne-singularity/aracne.sif
-end: "qc"
+end: "correlation"
