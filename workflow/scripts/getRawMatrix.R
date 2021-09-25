@@ -89,12 +89,18 @@ if(!IS_XENA) {
   matrix_counts <-  fread(XENA_COUNTS, nThread = MCCORES)
   
   extended_type <- ifelse(TYPE == "normal", "Normal Tissue", "Primary Tumor")
+  
+  cat("Extented type: ", extended_type, "\n")
+  cat("Primary disease or tissue: ", PRIMARY, "\n")
+  
   camelTissue <- paste0(toupper(substring(TISSUE, 1, 1)), substring(TISSUE, 2))
     
   targets <- matrix_samples %>% dplyr::filter(primary_site == camelTissue &
                                                 primary_disease_or_tissue == PRIMARY &
                                                 sample_type == extended_type)
-    
+  cat("Got", nrow(targets), " samples\n")
+  
+  cat("Getting count matrix\n")
   ### Expected counts from XENA are in log2(expected_count+1)
   ### get them back to expected_count for downstream pipeline
   matrix <- matrix_counts %>% dplyr::select_if(names(.) %in% c("sample", targets$sample)) %>%
