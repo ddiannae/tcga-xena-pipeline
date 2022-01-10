@@ -12,8 +12,8 @@ def get_output_files(wildcards):
         for t in config["tissues"]:
             files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_no-arsyn_cancer_mi.adj")
             files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_no-arsyn_normal_mi.adj")
-            #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_arsyn_normal_pearson.tsv")
-            #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_arsyn_cancer_pearson.tsv")
+            #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_normal_pearson.tsv")
+            #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_cancer_pearson.tsv")
     elif config["end"] == "deg":
         for t in config["tissues"]:
             files.append(config["datadir"]+"/"+t["name"]+"/deg/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_deg_results.tsv")
