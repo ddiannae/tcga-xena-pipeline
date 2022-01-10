@@ -83,5 +83,7 @@ cat("Saving deg results\n")
 topTable(lfc_fit, sort.by = "P", n = Inf, adjust.method="BH") %>%
   janitor::clean_names() %>% mutate(gene_id = rownames(.)) %>%
   inner_join(annot %>% select(gene_id, ensembl_id, chr, gene_name), by ="gene_id") %>% select(-gene_id) %>%
-  select(ensembl_id, everything()) %>%
+  select(ensembl_id, everything())  %>%
+  mutate(adj_p_val = ifelse(adj_p_val > 0.05, 1, adj_p_val), 
+                           log_fc = ifelse(adj_p_val > 0.05, 0, log_fc)) %>%
   write_tsv(snakemake@output[["deg_results"]])
