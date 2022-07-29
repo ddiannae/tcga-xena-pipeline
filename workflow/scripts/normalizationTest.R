@@ -44,7 +44,7 @@ load(snakemake@input[[1]])
 cat("Testing normalization methods\n.")
 rawEDA <- EDASeq::newSeqExpressionSet(
   counts = full$M,
-  featureData = full$annot %>% as.data.frame(),
+  featureData = data.frame(full$annot, row.names = full$annot$gene_id),
   phenoData = data.frame(
     conditions = full$targets$group,
     row.names = full$targets$id))

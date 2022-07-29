@@ -18,7 +18,7 @@ STEP3 = snakemake@params[["step3"]]
   
   mydata <- NOISeq::readData(
     data = full$M, 
-    factors = full$target %>% select(group))
+    factors = full$target %>% select(group) %>% as.data.frame())
   
   cat("Performing ARSyN for batch correction")
   myARSyN <- ARSyNseq(mydata, norm = "n", logtransf = FALSE)
