@@ -10,13 +10,14 @@ def get_output_files(wildcards):
             files.append(config["datadir"]+"/"+t["name"]+"/plots/normalization_plots.pdf")
     elif config["end"] == "correlation":
         for t in config["tissues"]:
-            files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_no-arsyn_cancer_mi.adj")
-            files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_no-arsyn_normal_mi.adj")
+            files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_cancer_mi.adj")
+            files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_normal_mi.adj")
             #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_normal_pearson.tsv")
             #files.append(config["datadir"]+"/"+t["name"]+"/correlation/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_cancer_pearson.tsv")
     elif config["end"] == "deg":
         for t in config["tissues"]:
             files.append(config["datadir"]+"/"+t["name"]+"/deg/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_deg_results.tsv")
+            print(config["datadir"]+"/"+t["name"]+"/deg/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_deg_results.tsv")
     return files
 
 def get_xena_dir(wildcards):
@@ -65,3 +66,10 @@ def get_normal_tissue(wildcards):
 
 def get_cancer_tissue(wildcards):
     return [x["cancer"] for x in config["tissues"] if x["name"] == wildcards.tissue][0]
+
+def get_xena_extended_type(wildcards):
+    return [x[f'sample_type_{wildcards.type}'] if f'sample_type_{wildcards.type}' in x else None for x in config["tissues"] if x["name"] == wildcards.tissue][0]
+
+def get_tissue_name(wildcards):
+    return [x[f'tissue_name_{wildcards.type}'] if f'tissue_name_{wildcards.type}' in x else x["name"] for x in config["tissues"] if x["name"] == wildcards.tissue][0]
+

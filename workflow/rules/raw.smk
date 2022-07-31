@@ -19,10 +19,11 @@ rule get_raw_matrix:
         samples = config["datadir"]+"/{tissue}/results/{tissue}-{type}-samples.tsv",
     params:
         tissue_dir=get_tissue_dir,
-        tissue="{tissue}",
+        tissue=get_tissue_name,
         type="{type}",
         is_xena=is_xena_tissue, 
         primary=get_xena_primary,
+        extended_type=get_xena_extended_type
     threads: 3
     log:
         config['datadir']+"/{tissue}/log/raw_matrix_{type}.log"

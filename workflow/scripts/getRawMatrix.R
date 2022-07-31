@@ -83,18 +83,26 @@ if(!IS_XENA) {
 } else {
   XENA_COUNTS <- snakemake@input[[1]]
   XENA_SAMPLES <- snakemake@input[[2]]
-  PRIMARY <-snakemake@params[["primary"]]
+  PRIMARY <- snakemake@params[["primary"]]
+  extended_type <- snakemake@params[["extended_type"]]
   
   matrix_samples <- read_tsv(XENA_SAMPLES) %>% clean_names()
   matrix_counts <-  fread(XENA_COUNTS, nThread = MCCORES)
   
-  extended_type <- ifelse(TYPE == "normal", "Normal Tissue", "Primary Tumor")
-  
+  # When the normal samples should come from TCGA in UCSC Xena, the extended type 
+  # for normal should be: "Solid Tissue Normal". This is only for testing
+  # When the normal samples should come from GTEX in UCSC Xena, the extended type 
+  # for normal should be: "Normal Tissue". This is the usual pipeline
+  if(is.null(extended_type)) {
+    extended_type <- ifelse(TYPE == "normal", "Normal Tissue", "Primary Tumor")  
+  }
+
   cat("Extented type: ", extended_type, "\n")
   cat("Primary disease or tissue: ", PRIMARY, "\n")
   
   camelTissue <- paste0(toupper(substring(TISSUE, 1, 1)), substring(TISSUE, 2))
-    
+  
+  cat("Tissue name: ", camelTissue, "\n")
   targets <- matrix_samples %>% dplyr::filter(primary_site == camelTissue &
                                                 primary_disease_or_tissue == PRIMARY &
                                                 sample_type == extended_type)
