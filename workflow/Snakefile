@@ -17,7 +17,8 @@ include: "rules/gdc.smk"
 
 wildcard_constraints:
     tissue="[A-Za-z]+",
-    type="normal|cancer"
+    type="normal|cancer",
+    arsyn="si-arsyn|no-arsyn"
 
 rule all:
     input:
