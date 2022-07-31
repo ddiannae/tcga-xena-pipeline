@@ -1,6 +1,5 @@
 datadir: /datos/ot/diana/regulacion-trans
 xenadir: xena
-#bladder, brain, breast, colorectal, esophagus, kidney, liver, lung, pancreas, prostate, skin, thyroid, uterus
 tissues:
 - name: bladder
   step1: gc-upper
@@ -32,7 +31,6 @@ tissues:
   step3: tmm
 - name: liver
   normal: Liver
-  cancer: Liver Hepatocelullar Carcinoma
   step1: gc-loess
   step2: length-full
   step3: tmm
@@ -81,4 +79,4 @@ tissues:
 xena: [skin, pancreas, esophagus, brain, ovary, testis, prostate]
 # Aracne image from: https://github.com/ddiannae/ARACNE-multicore
 aracne_singularity: /home/dgarcia/Workspace/aracne-singularity/aracne.sif
-end: "correlation"
+end: "deg"

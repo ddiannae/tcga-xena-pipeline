@@ -1,0 +1,45 @@
+datadir: /datos/ot/diana/regulacion-trans-test
+xenadir: xena
+tissues:
+# Liver normal from tcga-Xena, cancer from tcga-Xena
+- name: livertt
+  tissue_name: liver
+  normal: Liver Hepatocellular Carcinoma
+  cancer: Liver Hepatocellular Carcinoma
+  step1: gc-loess
+  step2: length-upper
+  step3: tmm
+  # Default sample type for normal tissues in Xena is Normal Tissue (GTex), when getting normal
+  # samples from TCGA, it should added like this
+  sample_type_normal: Solid Tissue Normal
+# Liver normal from gtex-Xena, cancer from tcga-Xena
+- name: livergt
+  tissue_name: liver
+  normal: Liver
+  cancer: Liver Hepatocellular Carcinoma
+  step1: gc-full
+  step2: length-loess
+  step3: tmm
+# Uterus normal from gtex-Xena, cancer from tcga-Xena
+- name: uterusgt
+  tissue_name_normal: uterus
+  tissue_name_cancer: endometrium
+  normal: Uterus
+  cancer: Uterine Corpus Endometrioid Carcinoma
+  step1: gc-upper
+  step2: length-full
+  step3: tmm
+# Uterus normal from tca-Xena, cancer from tcga-Xena
+- name: uterustt
+  tissue_name_normal: endometrium
+  tissue_name_cancer: endometrium
+  normal: Uterine Corpus Endometrioid Carcinoma
+  cancer: Uterine Corpus Endometrioid Carcinoma
+  sample_type_normal: Solid Tissue Normal
+  step1: gc-median
+  step2: length-full
+  step3: tmm
+xena: [livertt, uterusgt, uterustt, livergt]
+# Aracne image from: https://github.com/ddiannae/ARACNE-multicore
+aracne_singularity: /home/dgarcia/Workspace/aracne-singularity/aracne.sif
+end: "deg"
