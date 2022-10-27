@@ -15,9 +15,11 @@ tissues:
   step1: gc-upper
   step2: length-no
   step3: tmm
-- name: colorectal
-  step1: gc-full
-  step2: length-full
+- name: colon
+  normal: Colon - Transverse 
+  cancer: Colon Adenocarcinoma
+  step1: gc-upper
+  step2: length-upper
   step3: tmm
 - name: esophagus
   normal: Esophagus - Mucosa
@@ -31,7 +33,8 @@ tissues:
   step3: tmm
 - name: liver
   normal: Liver
-  step1: gc-loess
+  cancer: Liver Hepatocellular Carcinoma
+  step1: gc-median
   step2: length-full
   step3: tmm
 - name: lung
@@ -76,7 +79,7 @@ tissues:
   step1: gc-full
   step2: length-no
   step3: tmm
-xena: [skin, pancreas, esophagus, brain, ovary, testis, prostate]
+xena: [colon, skin, pancreas, esophagus, liver, brain, ovary, testis, prostate]
 # Aracne image from: https://github.com/ddiannae/ARACNE-multicore
 aracne_singularity: /home/dgarcia/Workspace/aracne-singularity/aracne.sif
 end: "deg"
