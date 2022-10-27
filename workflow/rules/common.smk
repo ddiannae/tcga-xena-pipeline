@@ -17,7 +17,6 @@ def get_output_files(wildcards):
     elif config["end"] == "deg":
         for t in config["tissues"]:
             files.append(config["datadir"]+"/"+t["name"]+"/deg/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_deg_results.tsv")
-            print(config["datadir"]+"/"+t["name"]+"/deg/"+t["step1"]+"_"+t["step2"]+"_"+t["step3"]+"_si-arsyn_deg_results.tsv")
     return files
 
 def get_xena_dir(wildcards):
